@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>The Card — Golf Rankings</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0c0c0c;--surface:#161616;--surface2:#1e1e1e;--surface3:#242424;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --gold:#c9a84c;--gold2:rgba(201,168,76,0.15);--gold3:rgba(201,168,76,0.06);
+  --white:#f0ebe0;--gray:#888;--gray2:#bbb;--green:#1e3d1a;--red:#c0392b;
+  --nav-h:56px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+input,select,button,textarea{font-family:inherit}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(12,12,12,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;height:var(--nav-h)}
+.nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.2rem;font-weight:700;color:var(--gold);padding:0 1.5rem;border-right:1px solid var(--border);white-space:nowrap;height:100%;display:flex;align-items:center;flex-shrink:0}
+.nav-tabs{display:flex;height:100%;overflow-x:auto;flex:1}
+.nav-tab{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--gray);padding:0 1.1rem;height:100%;display:flex;align-items:center;border-right:1px solid var(--border);cursor:pointer;white-space:nowrap;transition:color .2s,background .2s;border-bottom:2px solid transparent;flex-shrink:0}
+.nav-tab:hover{color:var(--white);background:var(--gold3)}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.nav-add-tab{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--gray);padding:0 1rem;height:100%;display:flex;align-items:center;cursor:pointer;white-space:nowrap;border-left:1px solid var(--border);transition:color .2s}
+.nav-add-tab:hover{color:var(--gold)}
+.nav-right{padding:0 1.1rem;font-family:'Barlow Condensed',sans-serif;font-size:.63rem;letter-spacing:.14em;color:var(--gray);white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:.65rem}
+.lock-btn{font-size:.85rem;cursor:pointer;opacity:.55;transition:opacity .2s;background:none;border:none;color:inherit;padding:0}
+.lock-btn:hover{opacity:1}
+
+/* PAGES */
+.page{display:none;min-height:calc(100vh - var(--nav-h))}
+.page.active{display:block}
+
+/* HERO */
+.hero{padding:2.5rem 2rem 1.5rem;max-width:1700px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1.25rem}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;line-height:1}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero-sub{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;letter-spacing:.13em;text-transform:uppercase;color:var(--gray);margin-top:.5rem}
+.hero-stats{display:flex;gap:1.75rem;flex-wrap:wrap}
+.stat{text-align:center}
+.stat-n{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--gold);line-height:1}
+.stat-l{font-family:'Barlow Condensed',sans-serif;font-size:.58rem;letter-spacing:.17em;text-transform:uppercase;color:var(--gray);margin-top:.2rem}
+
+/* CONTROLS */
+.controls{max-width:1700px;margin:0 auto;padding:.65rem 2rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);border-top:1px solid var(--border);background:rgba(12,12,12,.6)}
+.ctrl-input{background:var(--surface);border:1px solid var(--border);color:var(--white);font-size:.8rem;padding:.42rem .85rem;outline:none;transition:border-color .2s}
+.ctrl-input:focus{border-color:var(--gold)}
+.ctrl-input::placeholder{color:var(--gray)}
+.ctrl-select{background:var(--surface);border:1px solid var(--border);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:.7rem;letter-spacing:.07em;padding:.42rem .85rem;cursor:pointer;outline:none}
+.ctrl-label{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);white-space:nowrap}
+.tiers-wrap{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.tier-tag{display:flex;align-items:center;gap:.25rem;background:var(--surface2);border:1px solid var(--border);padding:.28rem .5rem}
+.tier-tag-label{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;color:var(--gold)}
+.tier-tag input{width:40px;background:transparent;border:none;color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;text-align:center;outline:none;padding:0}.tier-tag input:read-only{color:var(--gray);cursor:not-allowed}
+.tier-tag-del{background:none;border:none;color:var(--gray);cursor:pointer;font-size:.75rem;line-height:1;padding:0 0 0 .2rem;transition:color .15s}
+.tier-tag-del:hover{color:var(--red)}
+.add-tier-btn{background:none;border:1px dashed var(--border2);color:var(--gray);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .65rem;cursor:pointer;transition:all .2s}
+.add-tier-btn:hover{border-color:var(--gold);color:var(--gold)}
+.count-badge{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;letter-spacing:.11em;color:var(--gray);margin-left:auto}
+.add-course-btn{background:var(--gold);border:none;color:var(--black);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;padding:.42rem .9rem;cursor:pointer;transition:opacity .2s;display:none}
+.add-course-btn:hover{opacity:.85}
+.add-course-btn.visible{display:block}
+
+/* TABLE */
+.table-wrap{max-width:1700px;margin:0 auto;padding:0 0 6rem;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1300px}
+thead tr{background:var(--surface2)}
+th{font-family:'Barlow Condensed',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);padding:.65rem .5rem;text-align:center;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:2px solid var(--gold2);transition:color .15s;position:sticky;top:var(--thead-top,56px);background:var(--surface2);z-index:9}
+th:hover{color:#e8c96d}
+th.sorted{color:#e8c96d}
+th:nth-child(2){text-align:left;min-width:195px}
+tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+tbody tr:hover{background:var(--gold3)}
+.tr-t1{background:rgba(201,168,76,.09)}.tr-t2{background:rgba(201,168,76,.055)}.tr-t3{background:rgba(201,168,76,.025)}
+td{padding:.62rem .5rem;text-align:center;vertical-align:middle;font-size:.79rem}
+td:nth-child(2){text-align:left}
+.td-rank{font-family:'Playfair Display',serif;font-weight:700;font-size:.98rem;color:var(--gray)}
+.td-rank.r1{color:var(--gold);font-size:1.1rem}.td-rank.r2{color:#c4b46a}.td-rank.r3{color:#a89858}
+.td-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.91rem;letter-spacing:.01em}
+.td-sub{font-size:.6rem;color:var(--gray);margin-top:.08rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
+.td-num{font-family:'Barlow Condensed',sans-serif;font-weight:600;color:var(--gray2)}
+.td-score{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.84rem}
+.c5{color:#4caf50}.c4{color:#8bc34a}.c35{color:#cddc39}.c3{color:#ffc107}.c2{color:#ff7043}.c1{color:#ef5350}
+.tier-div td{padding:.28rem .5rem;background:var(--surface3);font-family:'Barlow Condensed',sans-serif;font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);cursor:default;text-align:left;border-bottom:1px solid var(--gold2)}
+.tier-div:hover{background:var(--surface3) !important}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.9);backdrop-filter:blur(6px);overflow-y:auto}
+.overlay.open{display:block}
+.modal{background:var(--black);max-width:940px;margin:2rem auto 5rem;border:1px solid var(--border2)}
+.modal-topbar{position:sticky;top:0;z-index:5;background:rgba(12,12,12,.97);border-bottom:1px solid var(--border);padding:.6rem 1.25rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.modal-topbar-left{display:flex;align-items:center;gap:.75rem}
+.modal-topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gray)}
+.close-btn{background:none;border:none;color:var(--gray);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;transition:color .15s}
+.close-btn:hover{color:var(--white)}
+.edit-toggle{background:none;border:1px solid var(--border2);color:var(--gray2);font-family:'Barlow Condensed',sans-serif;font-size:.63rem;letter-spacing:.14em;text-transform:uppercase;padding:.32rem .8rem;cursor:pointer;transition:all .2s}
+.edit-toggle:hover{border-color:var(--gold);color:var(--gold)}
+.edit-toggle.on{background:var(--gold);border-color:var(--gold);color:var(--black)}
+.edit-toggle.hidden{display:none}
+
+.modal-hero{background:var(--green);padding:1.75rem 2.5rem 1.5rem;position:relative;overflow:hidden}
+.modal-hero::after{content:attr(data-num);position:absolute;right:-.5rem;top:-.5rem;font-family:'Playfair Display',serif;font-size:7rem;font-weight:900;color:rgba(255,255,255,.05);line-height:1;pointer-events:none}
+.modal-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(201,168,76,.75);margin-bottom:.35rem}
+.modal-title{font-family:'Playfair Display',serif;font-size:clamp(1.4rem,3.5vw,2.2rem);font-weight:900;line-height:1.05}
+.modal-title-edit{display:none;width:100%;background:rgba(0,0,0,.3);border:1px solid var(--gold);color:var(--white);font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;padding:.3rem .5rem;outline:none}
+.edit-mode .modal-title{display:none}
+.edit-mode .modal-title-edit{display:block}
+
+.meta-strip{background:var(--gold);display:flex;flex-wrap:wrap}
+.meta-item{padding:.65rem 1rem;border-right:1px solid rgba(0,0,0,.12);flex:1;min-width:75px}
+.meta-item:last-child{border-right:none}
+.meta-l{font-family:'Barlow Condensed',sans-serif;font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(12,12,12,.5)}
+.meta-v{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--black);margin-top:.1rem}
+
+.modal-body{padding:1.5rem 2.5rem}
+.section-label{font-family:'Barlow Condensed',sans-serif;font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:.85rem;padding-bottom:.45rem;border-bottom:1px solid var(--border)}
+
+/* photos */
+.photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:3px;margin-bottom:1.25rem}
+.photos-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.no-photos{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;color:var(--gray);margin-bottom:1.25rem;padding:.75rem;border:1px dashed var(--border)}
+.photo-wrap{display:none;margin-bottom:1.25rem}
+.photo-wrap textarea{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--white);font-size:.77rem;padding:.6rem .8rem;resize:vertical;min-height:65px;outline:none;line-height:1.5}
+.photo-wrap textarea:focus{border-color:var(--gold)}
+.photo-hint{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;color:var(--gray);margin-top:.35rem}
+.edit-mode .photo-wrap{display:block}
+
+/* review */
+.review-box{font-size:.92rem;line-height:1.8;color:rgba(240,235,224,.82);font-style:italic;margin-bottom:1.25rem}
+.review-box p{margin-bottom:.85rem}
+.no-review{border:1px dashed var(--border);padding:1rem;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;letter-spacing:.1em;color:var(--gray);margin-bottom:1.25rem}
+.review-view{}
+.review-edit{display:none;width:100%;background:var(--surface);border:1px solid var(--border);color:var(--white);font-size:.86rem;padding:.7rem .9rem;resize:vertical;min-height:130px;outline:none;line-height:1.7;margin-bottom:1.25rem}
+.review-edit:focus{border-color:var(--gold)}
+.edit-mode .review-view{display:none}
+.edit-mode .review-edit{display:block}
+
+/* ratings */
+.ratings-grid{display:grid;grid-template-columns:1fr 1fr;gap:.1rem;background:var(--border);margin-bottom:1.25rem}
+.r-cell{background:var(--surface);padding:.8rem 1rem}
+.r-label{font-family:'Barlow Condensed',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);margin-bottom:.35rem}
+.r-row{display:flex;align-items:center;gap:.6rem}
+.r-bar-bg{flex:1;height:3px;background:rgba(255,255,255,.07)}
+.r-bar-fg{height:100%;background:var(--gold);transition:width .65s ease}
+.r-val{font-family:'Playfair Display',serif;font-size:.88rem;font-weight:700;color:var(--gold);min-width:30px;text-align:right}
+.r-edit{display:none;width:62px;background:var(--surface2);border:1px solid var(--gold);color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;padding:.22rem .35rem;text-align:center;outline:none}
+.edit-mode .r-edit{display:block}
+.edit-mode .r-bar-bg,.edit-mode .r-val{display:none}
+
+/* scores */
+.score-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:.1rem;background:var(--border);margin-bottom:1.25rem}
+.s-item{background:var(--surface2);padding:.9rem;text-align:center}
+.s-label{font-family:'Barlow Condensed',sans-serif;font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gray);margin-bottom:.3rem}
+.s-val{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:900;color:var(--gold)}
+
+/* pricing */
+.pricing-table{width:100%;border-collapse:collapse;margin-bottom:1.25rem;font-family:'Barlow Condensed',sans-serif}
+.pricing-table th{font-size:.58rem;letter-spacing:.17em;color:var(--gold);padding:.45rem .65rem;text-align:center;border-bottom:1px solid var(--border);font-weight:700;cursor:default;background:none}
+.pricing-table td{padding:.5rem .65rem;text-align:center;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--gray2)}
+.pricing-table tr:last-child td{border-bottom:none}
+.pricing-table td:first-child{text-align:left;color:var(--gray);font-weight:600}
+.p-display{}
+.p-edit{display:none;width:78px;background:var(--surface2);border:1px solid var(--border);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:.78rem;padding:.28rem .45rem;text-align:center;outline:none}
+.p-edit:focus{border-color:var(--gold)}
+.edit-mode .p-display{display:none}
+.edit-mode .p-edit{display:inline-block}
+
+/* details */
+.detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.1rem;background:var(--border);margin-bottom:1.25rem}
+.d-item{background:var(--surface2);padding:.8rem;text-align:center}
+.d-label{font-family:'Barlow Condensed',sans-serif;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gray);margin-bottom:.25rem}
+.d-val{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--white)}
+.d-edit{display:none;width:100%;background:var(--surface);border:1px solid var(--border);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;padding:.3rem .45rem;text-align:center;outline:none;margin-top:.25rem}
+.d-edit:focus{border-color:var(--gold)}
+.edit-mode .d-val{display:none}
+.edit-mode .d-edit{display:block}
+
+/* save */
+.save-btn{width:100%;background:var(--gold);border:none;color:var(--black);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;padding:.72rem;cursor:pointer;margin-top:1.1rem;transition:opacity .2s;display:none}
+.save-btn:hover{opacity:.85}
+.edit-mode .save-btn{display:block}
+.delete-btn{width:100%;background:none;border:1px solid var(--red);color:var(--red);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;padding:.55rem;cursor:pointer;margin-top:.5rem;transition:all .2s;display:none}
+.delete-btn:hover{background:var(--red);color:var(--white)}
+.edit-mode .delete-btn{display:block}
+
+/* modal nav */
+.modal-nav{display:flex;justify-content:space-between;padding-top:1.1rem;border-top:1px solid var(--border);margin-top:.5rem}
+.mnav-btn{background:none;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);cursor:pointer;transition:opacity .2s}
+.mnav-btn:hover{opacity:.7}
+.mnav-btn:disabled{color:var(--gray);cursor:default}
+
+/* password overlay */
+.pw-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.93);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+.pw-overlay.open{display:flex}
+.pw-box{background:var(--surface);border:1px solid var(--border2);padding:2.25rem;width:300px;text-align:center}
+.pw-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold);margin-bottom:.4rem}
+.pw-sub{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;letter-spacing:.12em;color:var(--gray);margin-bottom:1.25rem}
+.pw-input{width:100%;background:var(--black);border:1px solid var(--border2);color:var(--white);font-size:.95rem;padding:.6rem .85rem;text-align:center;letter-spacing:.2em;outline:none;margin-bottom:.85rem}
+.pw-input:focus{border-color:var(--gold)}
+.pw-btn{width:100%;background:var(--gold);border:none;color:var(--black);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;padding:.65rem;cursor:pointer}
+.pw-btn:hover{opacity:.85}
+.pw-error{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;color:var(--red);letter-spacing:.1em;margin-top:.5rem;min-height:.9rem}
+.pw-cancel{font-family:'Barlow Condensed',sans-serif;font-size:.63rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);cursor:pointer;margin-top:.65rem;display:block;transition:color .2s}
+.pw-cancel:hover{color:var(--white)}
+
+/* add course modal */
+.add-modal{background:var(--surface);border:1px solid var(--border2);max-width:520px;width:90%;padding:2rem;position:relative}
+.add-modal h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--gold);margin-bottom:1.25rem}
+.add-field{margin-bottom:.85rem}
+.add-field label{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gray);display:block;margin-bottom:.3rem}
+.add-field input{width:100%;background:var(--black);border:1px solid var(--border2);color:var(--white);font-size:.88rem;padding:.5rem .75rem;outline:none}
+.add-field input:focus{border-color:var(--gold)}
+.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+
+/* add tab modal */
+.add-tab-modal{background:var(--surface);border:1px solid var(--border2);max-width:400px;width:90%;padding:2rem;position:relative}
+.add-tab-modal h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold);margin-bottom:1.25rem}
+
+/* coming soon */
+.coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:1rem;text-align:center;padding:2rem}
+.cs-icon{font-size:2.5rem;opacity:.3}
+.cs-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--gold)}
+.cs-sub{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gray)}
+
+/* toast */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(4rem);background:var(--gold);color:var(--black);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:.55rem 1.4rem;z-index:999;transition:transform .3s;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:768px){
+  .nav-logo{padding:0 .9rem}
+  .nav-tab{padding:0 .85rem;font-size:.63rem}
+  .hero{padding:1.75rem 1rem 1.25rem}
+  .controls{padding:.6rem 1rem}
+  .modal{margin:0;border:none}
+  .modal-body{padding:1.1rem}
+  .modal-hero{padding:1.5rem 1.1rem 1.25rem}
+  .ratings-grid{grid-template-columns:1fr}
+  .detail-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">The Card</div>
+  <div class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" data-page="rankings" data-label="DFW Rankings">DFW Rankings</div>
+    <div class="nav-tab" data-page="best-holes" data-label="Best Holes DFW">Best Holes DFW</div>
+    <div class="nav-tab" data-page="hardest-holes" data-label="Hardest Holes DFW">Hardest Holes DFW</div>
+    <div class="nav-tab" data-page="cc-rankings" data-label="Country Club Rankings">Country Club Rankings</div>
+    <div class="nav-tab" data-page="top100" data-label="My Top 100 World">My Top 100 World</div>
+  </div>
+  <div class="nav-add-tab hidden" id="navAddTab" title="Add new city tab">+ Tab</div>
+  <div class="nav-right">
+    <span id="navCount">80</span>
+    <button class="lock-btn" id="lockBtn" title="Click to unlock editing">🔒</button>
+  </div>
+</nav>
+
+<!-- PASSWORD OVERLAY -->
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-box">
+    <div class="pw-title">Editor Access</div>
+    <div class="pw-sub">Enter password to enable editing</div>
+    <input class="pw-input" id="pwInput" type="password" placeholder="••••••••" autocomplete="off">
+    <button class="pw-btn" id="pwBtn">Unlock</button>
+    <div class="pw-error" id="pwError"></div>
+    <span class="pw-cancel" id="pwCancel">Cancel</span>
+  </div>
+</div>
+
+<!-- ADD COURSE OVERLAY -->
+<div class="overlay" id="addOverlay">
+  <div class="add-modal" style="margin:4rem auto">
+    <h2>Add New Course</h2>
+    <div class="add-field"><label>Course Name *</label><input id="ac-name" type="text" placeholder="e.g. Vail Golf Club"></div>
+    <div class="add-grid">
+      <div class="add-field"><label>Par</label><input id="ac-par" type="number" placeholder="72"></div>
+      <div class="add-field"><label>Distance (yds)</label><input id="ac-dist" type="number" placeholder="7000"></div>
+      <div class="add-field"><label>Course Index</label><input id="ac-index" type="number" step="0.1" placeholder="74.2"></div>
+      <div class="add-field"><label>Slope</label><input id="ac-slope" type="number" placeholder="135"></div>
+      <div class="add-field"><label>Times Played</label><input id="ac-played" type="number" placeholder="0"></div>
+      <div class="add-field"><label>Initial Rank</label><input id="ac-rank" type="number" placeholder="81"></div>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem">
+      <button class="save-btn" style="display:block;margin-top:0;flex:1" id="acSaveBtn">Add Course</button>
+      <button class="save-btn" style="display:block;margin-top:0;flex:0 0 auto;background:var(--surface2);color:var(--gray2);border:1px solid var(--border2)" id="acCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TAB OVERLAY -->
+<div class="overlay" id="addTabOverlay">
+  <div class="add-tab-modal" style="margin:4rem auto">
+    <h2>Add City Tab</h2>
+    <div class="add-field"><label>City / Tab Name</label><input id="at-name" type="text" placeholder="e.g. Vail Rankings"></div>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem">
+      <button class="save-btn" style="display:block;margin-top:0;flex:1" id="atSaveBtn">Add Tab</button>
+      <button class="save-btn" style="display:block;margin-top:0;flex:0 0 auto;background:var(--surface2);color:var(--gray2);border:1px solid var(--border2)" id="atCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGES -->
+<div class="page active" id="page-rankings">
+  <div class="hero">
+    <div>
+      <h1>DFW <em>Golf</em><br>Rankings</h1>
+      <div class="hero-sub">Personal Rankings &amp; Reviews — Dallas / Fort Worth</div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-n" id="statCourses">80</div><div class="stat-l">Courses</div></div>
+      <div class="stat"><div class="stat-n" id="statRounds">—</div><div class="stat-l">Rounds</div></div>
+      <div class="stat"><div class="stat-n" id="statAvg">—</div><div class="stat-l">Avg Exp.</div></div>
+    </div>
+  </div>
+  <div class="controls" id="controls">
+    <input class="ctrl-input" id="search" type="text" placeholder="Search…" style="width:200px">
+    <select class="ctrl-select" id="sortSel">
+      <option value="rank">Ranking</option>
+      <option value="experience">Experience</option>
+      <option value="courseScore">Course Score</option>
+      <option value="value">Value ★</option>
+      <option value="greens">Greens</option>
+      <option value="layout">Layout</option>
+      <option value="aura">Aura</option>
+      <option value="timesPlayed">Most Played</option>
+      <option value="name">A–Z</option>
+    </select>
+    <span class="ctrl-label">Tiers:</span>
+    <div class="tiers-wrap" id="tiersWrap"></div>
+    <button class="add-tier-btn" id="addTierBtn">+ Tier</button>
+    <button class="add-course-btn" id="addCourseBtn">+ Add Course</button>
+    <div class="count-badge" id="countBadge">80 courses</div>
+  </div>
+  <div class="table-wrap">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th data-col="rank" style="width:42px">#</th>
+          <th data-col="name">Course</th>
+          <th data-col="timesPlayed">Rnds</th>
+          <th data-col="experience">Exp.</th>
+          <th data-col="courseScore">Course</th>
+          <th data-col="playability">Play.</th>
+          <th data-col="value">Val★</th>
+          <th data-col="maintenance">Maint</th>
+          <th data-col="fairways">Fair</th>
+          <th data-col="rough">Rough</th>
+          <th data-col="bunkers">Bunk</th>
+          <th data-col="greens">Grns</th>
+          <th data-col="layout">Layot</th>
+          <th data-col="difficulty">Diff</th>
+          <th data-col="aura">Aura</th>
+          <th data-col="range">Range</th>
+          <th data-col="clubhouse">Clbhs</th>
+          <th data-col="par">Par</th>
+          <th data-col="distance">Yds</th>
+          <th data-col="index">Idx</th>
+          <th data-col="slope">Slp</th>
+          <th data-col="wdMorning">WD Morn</th>
+          <th data-col="wdAfternoon">WD Aftn</th>
+          <th data-col="wdTwilight">WD Twi</th>
+          <th data-col="weMorning">WE Morn</th>
+          <th data-col="weAfternoon">WE Aftn</th>
+          <th data-col="weTwilight">WE Twi</th>
+          <th style="width:18px;cursor:default"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page" id="page-best-holes"><div class="coming-soon"><div class="cs-icon">⛳</div><div class="cs-title">Best Holes in DFW</div><div class="cs-sub">Upload your data file to populate this tab</div></div></div>
+<div class="page" id="page-hardest-holes"><div class="coming-soon"><div class="cs-icon">😬</div><div class="cs-title">Hardest Holes in DFW</div><div class="cs-sub">Upload your data file to populate this tab</div></div></div>
+<div class="page" id="page-cc-rankings"><div class="coming-soon"><div class="cs-icon">🏌️</div><div class="cs-title">Country Club Rankings</div><div class="cs-sub">Upload your data file to populate this tab</div></div></div>
+<div class="page" id="page-top100"><div class="coming-soon"><div class="cs-icon">🌍</div><div class="cs-title">My Top 100 World</div><div class="cs-sub">Upload your data file to populate this tab</div></div></div>
+
+<!-- COURSE MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <div class="modal-topbar">
+      <div class="modal-topbar-left">
+        <div class="modal-topbar-title" id="modalTopTitle"></div>
+        <button class="edit-toggle hidden" id="editToggle">✏️ Edit</button>
+      </div>
+      <button class="close-btn" id="closeBtn">✕ Close</button>
+    </div>
+    <div class="modal-hero" id="modalHero">
+      <div class="modal-eyebrow" id="modalEyebrow"></div>
+      <div class="modal-title" id="modalTitle"></div>
+      <input class="modal-title-edit" id="modalTitleEdit" type="text" placeholder="Course name">
+    </div>
+    <div class="meta-strip" id="metaStrip"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──
+const PASSWORD = 'golf2025';
+let unlocked = false;
+let pendingUnlock = null;
+
+// ── BASE DATA ──
+const BASE_DATA = [{"rank":1,"name":"Fields Ranch at PGA Frisco - East Course","timesPlayed":0,"maintenance":5.0,"fairways":4.75,"rough":4.75,"bunkers":4.75,"greens":4.75,"layout":4.75,"difficulty":5.0,"aura":4.75,"range":5.0,"clubhouse":5.0,"playability":4.92,"courseScore":4.82,"experience":4.95,"par":72.0,"distance":7860.0,"index":78.9,"slope":152.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":2,"name":"Pine Dunes","timesPlayed":6.0,"maintenance":4.75,"fairways":4.5,"rough":4.5,"bunkers":4.75,"greens":4.75,"layout":4.75,"difficulty":4.0,"aura":5.0,"range":4.25,"clubhouse":4.5,"playability":4.49,"courseScore":4.69,"experience":4.78,"par":72.0,"distance":7117.0,"index":74.4,"slope":131.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":3,"name":"Old American Golf Club","timesPlayed":2.0,"maintenance":4.75,"fairways":4.75,"rough":4.75,"bunkers":4.5,"greens":4.75,"layout":4.75,"difficulty":4.75,"aura":4.5,"range":5.0,"clubhouse":5.0,"playability":4.7,"courseScore":4.68,"experience":4.81,"par":71.0,"distance":7084.0,"index":75.2,"slope":145.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":4,"name":"The Tribute Golf Links","timesPlayed":10.0,"maintenance":4.75,"fairways":4.75,"rough":4.75,"bunkers":4.5,"greens":4.75,"layout":4.75,"difficulty":3.5,"aura":4.75,"range":5.0,"clubhouse":5.0,"playability":4.2,"courseScore":4.64,"experience":4.77,"par":72.0,"distance":7002.0,"index":73.9,"slope":130.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":5,"name":"Fields Ranch at PGA Frisco - West Course","timesPlayed":0,"maintenance":5.0,"fairways":4.5,"rough":4.75,"bunkers":4.75,"greens":4.75,"layout":4.0,"difficulty":4.75,"aura":4.5,"range":5.0,"clubhouse":5.0,"playability":4.58,"courseScore":4.62,"experience":4.75,"par":72.0,"distance":7319.0,"index":76.3,"slope":140.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":6,"name":"Waterchase","timesPlayed":5.0,"maintenance":4.5,"fairways":4.5,"rough":4.5,"bunkers":4.25,"greens":4.0,"layout":4.5,"difficulty":4.5,"aura":4.0,"range":3.5,"clubhouse":1.5,"playability":4.62,"courseScore":4.37,"experience":4.34,"par":72.0,"distance":7159.0,"index":74.7,"slope":135.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":7,"name":"Cowboys Golf Club","timesPlayed":0,"maintenance":4.25,"fairways":4.5,"rough":4.25,"bunkers":4.5,"greens":4.5,"layout":4.25,"difficulty":4.0,"aura":4.5,"range":4.5,"clubhouse":4.75,"playability":4.21,"courseScore":4.37,"experience":4.48,"par":72.0,"distance":7017.0,"index":74.2,"slope":140.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":8,"name":"Texas Star Golf Course","timesPlayed":6.0,"maintenance":4.5,"fairways":4.5,"rough":4.5,"bunkers":4.5,"greens":4.5,"layout":4.5,"difficulty":4.0,"aura":4.0,"range":4.25,"clubhouse":4.5,"playability":4.21,"courseScore":4.37,"experience":4.46,"par":71.0,"distance":6936.0,"index":74.1,"slope":136.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":9,"name":"Coyote Ridge","timesPlayed":2.0,"maintenance":4.5,"fairways":4.5,"rough":4.25,"bunkers":4.5,"greens":4.25,"layout":4.5,"difficulty":4.5,"aura":4.0,"range":4.5,"clubhouse":4.5,"playability":4.45,"courseScore":4.37,"experience":4.47,"par":72.0,"distance":7003.0,"index":75.2,"slope":141.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":10,"name":"Wild Horse Golf Club","timesPlayed":1.0,"maintenance":4.5,"fairways":4.5,"rough":4.25,"bunkers":4.25,"greens":4.5,"layout":4.0,"difficulty":3.0,"aura":4.5,"range":4.75,"clubhouse":5.0,"playability":3.66,"courseScore":4.28,"experience":4.4,"par":72.0,"distance":6891.0,"index":73.7,"slope":134.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":11,"name":"The Golf Club at Fossil Creek","timesPlayed":2.0,"maintenance":4.25,"fairways":4.25,"rough":4.0,"bunkers":4.0,"greens":4.25,"layout":4.75,"difficulty":3.75,"aura":4.5,"range":4.0,"clubhouse":4.0,"playability":4.13,"courseScore":4.27,"experience":4.34,"par":72.0,"distance":6865.0,"index":73.8,"slope":137.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":12,"name":"Texas Rangers Golf Club","timesPlayed":3.0,"maintenance":4.5,"fairways":4.5,"rough":4.5,"bunkers":4.25,"greens":4.5,"layout":4.0,"difficulty":3.0,"aura":4.0,"range":4.5,"clubhouse":4.75,"playability":3.79,"courseScore":4.24,"experience":4.34,"par":72.0,"distance":7010.0,"index":73.7,"slope":132.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":13,"name":"Heritage Ranch Golf & Country Club","timesPlayed":1.0,"maintenance":4.25,"fairways":4.25,"rough":4.25,"bunkers":4.5,"greens":4.25,"layout":4.25,"difficulty":4.0,"aura":4.0,"range":4.25,"clubhouse":4.25,"playability":4.18,"courseScore":4.22,"experience":4.3,"par":72.0,"distance":6988.0,"index":74.0,"slope":140.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":14,"name":"Tangle Ridge Golf Club","timesPlayed":7.0,"maintenance":4.25,"fairways":4.25,"rough":4.0,"bunkers":4.0,"greens":4.0,"layout":4.5,"difficulty":3.0,"aura":4.5,"range":4.0,"clubhouse":4.0,"playability":3.76,"courseScore":4.17,"experience":4.24,"par":72.0,"distance":6835.0,"index":73.4,"slope":133.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":15,"name":"Woodbridge Golf Club","timesPlayed":1.0,"maintenance":4.25,"fairways":4.25,"rough":4.25,"bunkers":3.75,"greens":4.0,"layout":4.25,"difficulty":4.25,"aura":3.75,"range":4.5,"clubhouse":4.25,"playability":4.38,"courseScore":4.13,"experience":4.22,"par":72.0,"distance":7088.0,"index":75.1,"slope":135.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":16,"name":"Buffalo Creek Golf Club","timesPlayed":4.0,"maintenance":4.25,"fairways":4.25,"rough":4.25,"bunkers":4.5,"greens":4.25,"layout":4.25,"difficulty":4.0,"aura":3.25,"range":4.0,"clubhouse":3.0,"playability":4.28,"courseScore":4.11,"experience":4.14,"par":71.0,"distance":7078.0,"index":74.9,"slope":132.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":17,"name":"The Bridges Golf Club (Gunter)","timesPlayed":1.0,"maintenance":4.25,"fairways":4.25,"rough":4.25,"bunkers":3.75,"greens":4.25,"layout":3.75,"difficulty":5.0,"aura":3.5,"range":3.75,"clubhouse":3.75,"playability":4.58,"courseScore":4.1,"experience":4.15,"par":72.0,"distance":7612.0,"index":77.7,"slope":139.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":18,"name":"Tierra Verde","timesPlayed":2.0,"maintenance":4.0,"fairways":4.0,"rough":4.0,"bunkers":4.0,"greens":4.0,"layout":4.0,"difficulty":3.0,"aura":4.0,"range":4.0,"clubhouse":4.0,"playability":3.75,"courseScore":3.96,"experience":4.03,"par":72.0,"distance":6975.0,"index":73.9,"slope":129.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":19,"name":"Waterview Golf Club","timesPlayed":5.0,"maintenance":3.75,"fairways":4.0,"rough":4.0,"bunkers":4.25,"greens":4.0,"layout":4.25,"difficulty":3.5,"aura":3.5,"range":4.0,"clubhouse":3.75,"playability":4.24,"courseScore":3.96,"experience":4.02,"par":72.0,"distance":7191.0,"index":74.1,"slope":128.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":20,"name":"Pecan Hollow Golf Course","timesPlayed":2.0,"maintenance":4.0,"fairways":4.25,"rough":4.25,"bunkers":3.5,"greens":4.25,"layout":3.75,"difficulty":4.5,"aura":3.0,"range":4.25,"clubhouse":3.75,"playability":4.36,"courseScore":3.91,"experience":3.98,"par":71.0,"distance":7152.0,"index":75.4,"slope":141.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":21,"name":"Bridlewood Golf Club","timesPlayed":0,"maintenance":4.0,"fairways":4.0,"rough":3.75,"bunkers":3.75,"greens":4.0,"layout":4.0,"difficulty":3.0,"aura":3.75,"range":3.75,"clubhouse":4.0,"playability":3.9,"courseScore":3.9,"experience":3.96,"par":72.0,"distance":7111.0,"index":73.6,"slope":130.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":22,"name":"Cedar Crest Golf Course","timesPlayed":31.0,"maintenance":3.75,"fairways":3.75,"rough":3.75,"bunkers":3.75,"greens":4.0,"layout":4.5,"difficulty":3.5,"aura":4.0,"range":3.75,"clubhouse":4.25,"playability":3.81,"courseScore":3.88,"experience":3.95,"par":70.0,"distance":6726.0,"index":73.8,"slope":134.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":23,"name":"Sky Creek Ranch Golf Club","timesPlayed":1.0,"maintenance":3.75,"fairways":4.0,"rough":3.0,"bunkers":3.75,"greens":4.0,"layout":4.25,"difficulty":3.5,"aura":4.0,"range":4.0,"clubhouse":4.75,"playability":3.98,"courseScore":3.87,"experience":3.96,"par":72.0,"distance":6953.0,"index":73.4,"slope":136.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":24,"name":"Grapevine Golf Course","timesPlayed":0,"maintenance":3.75,"fairways":3.75,"rough":3.5,"bunkers":3.5,"greens":3.75,"layout":4.25,"difficulty":3.5,"aura":4.25,"range":3.75,"clubhouse":3.75,"playability":3.95,"courseScore":3.87,"experience":3.92,"par":72.0,"distance":6934.0,"index":74.1,"slope":134.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":25,"name":"Tenison Park Golf Course - Highlands Course","timesPlayed":25.0,"maintenance":3.75,"fairways":3.75,"rough":3.5,"bunkers":3.75,"greens":4.0,"layout":4.25,"difficulty":3.0,"aura":4.0,"range":3.0,"clubhouse":3.25,"playability":3.95,"courseScore":3.87,"experience":3.87,"par":72.0,"distance":7078.0,"index":73.9,"slope":129.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":26,"name":"Mansfield National Golf Club","timesPlayed":3.0,"maintenance":4.0,"fairways":4.25,"rough":4.25,"bunkers":3.5,"greens":3.5,"layout":4.0,"difficulty":2.0,"aura":3.5,"range":4.0,"clubhouse":3.25,"playability":3.28,"courseScore":3.78,"experience":3.82,"par":72.0,"distance":6850.0,"index":72.7,"slope":128.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":27,"name":"The Trails of Frisco Golf Club","timesPlayed":2.0,"maintenance":4.0,"fairways":4.0,"rough":3.75,"bunkers":3.5,"greens":4.25,"layout":3.75,"difficulty":4.0,"aura":3.0,"range":2.0,"clubhouse":3.25,"playability":3.98,"courseScore":3.77,"experience":3.74,"par":71.0,"distance":6959.0,"index":74.0,"slope":138.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":28,"name":"Ridgeview Ranch Golf Club","timesPlayed":2.0,"maintenance":3.5,"fairways":4.5,"rough":3.75,"bunkers":3.75,"greens":3.5,"layout":4.25,"difficulty":3.25,"aura":3.0,"range":4.0,"clubhouse":3.75,"playability":3.97,"courseScore":3.77,"experience":3.82,"par":72.0,"distance":7025.0,"index":74.1,"slope":130.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":29,"name":"Firewheel Golf Park - Bridges Course","timesPlayed":1.0,"maintenance":4.0,"fairways":3.75,"rough":4.0,"bunkers":3.5,"greens":3.75,"layout":4.0,"difficulty":3.25,"aura":3.5,"range":3.75,"clubhouse":3.5,"playability":3.66,"courseScore":3.76,"experience":3.8,"par":72.0,"distance":6819.0,"index":72.7,"slope":131.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":30,"name":"Sherrill Park Golf Course - Course 1","timesPlayed":1.0,"maintenance":4.0,"fairways":3.75,"rough":4.0,"bunkers":3.5,"greens":3.25,"layout":3.5,"difficulty":4.0,"aura":3.5,"range":4.75,"clubhouse":3.75,"playability":3.96,"courseScore":3.72,"experience":3.81,"par":72.0,"distance":7016.0,"index":74.4,"slope":132.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":31,"name":"Tour 18 Dallas","timesPlayed":1.0,"maintenance":3.0,"fairways":3.5,"rough":3.75,"bunkers":3.25,"greens":3.25,"layout":4.25,"difficulty":4.0,"aura":4.25,"range":4.0,"clubhouse":4.25,"playability":4.23,"courseScore":3.71,"experience":3.78,"par":72.0,"distance":7033.0,"index":75.2,"slope":140.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":32,"name":"Indian Creek Golf Club - Creek Course","timesPlayed":2.0,"maintenance":3.75,"fairways":3.5,"rough":3.5,"bunkers":3.25,"greens":3.5,"layout":3.5,"difficulty":4.5,"aura":3.5,"range":3.5,"clubhouse":3.5,"playability":4.33,"courseScore":3.66,"experience":3.69,"par":72.0,"distance":7235.0,"index":75.5,"slope":141.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":33,"name":"Frisco Lakes Golf Club","timesPlayed":0,"maintenance":3.75,"fairways":3.75,"rough":3.25,"bunkers":3.5,"greens":3.5,"layout":3.5,"difficulty":3.5,"aura":3.5,"range":3.75,"clubhouse":3.75,"playability":3.92,"courseScore":3.63,"experience":3.68,"par":72.0,"distance":7129.0,"index":74.3,"slope":131.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":34,"name":"Thorntree Golf Club","timesPlayed":4.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":4.5,"difficulty":4.5,"aura":2.5,"range":3.5,"clubhouse":3.5,"playability":4.49,"courseScore":3.58,"experience":3.62,"par":72.0,"distance":7042.0,"index":74.9,"slope":146.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":35,"name":"WestRidge Golf Course","timesPlayed":0,"maintenance":3.25,"fairways":3.25,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":4.25,"difficulty":3.0,"aura":3.5,"range":3.5,"clubhouse":3.5,"playability":3.91,"courseScore":3.55,"experience":3.58,"par":72.0,"distance":7043.0,"index":74.0,"slope":131.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":36,"name":"The Courses at Watters Creek - Traditions Course","timesPlayed":0,"maintenance":3.5,"fairways":3.25,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":3.5,"difficulty":4.0,"aura":3.5,"range":3.5,"clubhouse":3.5,"playability":3.96,"courseScore":3.54,"experience":3.57,"par":72.0,"distance":7015.0,"index":74.4,"slope":136.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":37,"name":"Bear Creek Golf Club - West Course","timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.75,"bunkers":3.0,"greens":3.0,"layout":4.0,"difficulty":4.0,"aura":3.5,"range":3.0,"clubhouse":3.5,"playability":3.75,"courseScore":3.52,"experience":3.54,"par":72.0,"distance":6677.0,"index":73.7,"slope":140.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":38,"name":"Champions Circle Golf Club","timesPlayed":0,"maintenance":3.5,"fairways":3.5,"rough":3.25,"bunkers":3.25,"greens":3.5,"layout":3.25,"difficulty":4.0,"aura":3.25,"range":3.25,"clubhouse":3.25,"playability":3.87,"courseScore":3.46,"experience":3.47,"par":72.0,"distance":7005.0,"index":73.7,"slope":143.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":39,"name":"The Resort Golf Club","timesPlayed":0,"maintenance":3.5,"fairways":3.25,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":3.5,"difficulty":3.5,"aura":3.5,"range":3.5,"clubhouse":3.5,"playability":3.37,"courseScore":3.44,"experience":3.47,"par":72.0,"distance":6636.0,"index":73.4,"slope":140.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":40,"name":"Indian Creek Golf Club - Lakes Course","timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.25,"bunkers":3.25,"greens":3.5,"layout":3.25,"difficulty":3.5,"aura":3.25,"range":3.5,"clubhouse":3.5,"playability":3.69,"courseScore":3.43,"experience":3.46,"par":72.0,"distance":7000.0,"index":74.0,"slope":132.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":41,"name":"The Golf Club at Twin Creeks","timesPlayed":1.0,"maintenance":3.25,"fairways":3.25,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":3.75,"difficulty":2.75,"aura":3.5,"range":4.5,"clubhouse":4.25,"playability":3.43,"courseScore":3.43,"experience":3.52,"par":72.0,"distance":6840.0,"index":73.2,"slope":131.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":42,"name":"Irving Golf Club","timesPlayed":12.0,"maintenance":3.75,"fairways":3.75,"rough":3.5,"bunkers":3.75,"greens":4.0,"layout":3.5,"difficulty":2.0,"aura":2.75,"range":4.5,"clubhouse":3.75,"playability":2.87,"courseScore":3.42,"experience":3.49,"par":71.0,"distance":6632.0,"index":71.8,"slope":127.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":43,"name":"Sherrill Park Golf Course - Course 2","timesPlayed":0,"maintenance":3.75,"fairways":3.75,"rough":3.5,"bunkers":3.5,"greens":3.75,"layout":3.5,"difficulty":1.75,"aura":3.25,"range":3.25,"clubhouse":3.25,"playability":2.5,"courseScore":3.4,"experience":3.41,"par":70.0,"distance":6375.0,"index":69.4,"slope":125.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":44,"name":"Stevens Park Golf Course","timesPlayed":10.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":3.5,"difficulty":2.0,"aura":3.5,"range":0.0,"clubhouse":3.5,"playability":2.48,"courseScore":3.33,"experience":3.25,"par":70.0,"distance":6285.0,"index":71.6,"slope":130.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":45,"name":"Firewheel Golf Park - Old Course","timesPlayed":0,"maintenance":3.25,"fairways":3.25,"rough":3.25,"bunkers":3.25,"greens":3.25,"layout":3.25,"difficulty":3.75,"aura":3.25,"range":3.25,"clubhouse":3.25,"playability":3.61,"courseScore":3.31,"experience":3.33,"par":71.0,"distance":6845.0,"index":74.1,"slope":135.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":46,"name":"Pinnacle Golf Club","timesPlayed":75.0,"maintenance":3.5,"fairways":3.5,"rough":3.0,"bunkers":2.75,"greens":4.0,"layout":3.5,"difficulty":2.0,"aura":3.5,"range":3.0,"clubhouse":4.0,"playability":2.55,"courseScore":3.28,"experience":3.31,"par":72.0,"distance":6349.0,"index":71.8,"slope":132.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":47,"name":"Hidden Creek Golf Club","timesPlayed":0,"maintenance":3.25,"fairways":3.0,"rough":3.25,"bunkers":3.25,"greens":3.25,"layout":3.25,"difficulty":4.0,"aura":3.25,"range":3.25,"clubhouse":3.25,"playability":3.67,"courseScore":3.28,"experience":3.3,"par":71.0,"distance":6829.0,"index":73.8,"slope":139.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":48,"name":"Rusted Rail","timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.25,"greens":3.25,"layout":2.5,"difficulty":2.5,"aura":3.0,"range":3.25,"clubhouse":3.0,"playability":3.33,"courseScore":3.26,"experience":3.27,"par":72.0,"distance":7218.0,"index":74.1,"slope":119.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":49,"name":"Riverside Golf Club","timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.25,"greens":3.25,"layout":3.0,"difficulty":3.5,"aura":2.5,"range":3.25,"clubhouse":2.0,"playability":3.56,"courseScore":3.26,"experience":3.24,"par":72.0,"distance":6957.0,"index":74.1,"slope":131.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":50,"name":"Bear Creek Golf Club - East Course","timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.0,"greens":1.75,"layout":3.5,"difficulty":3.5,"aura":3.0,"range":3.0,"clubhouse":3.5,"playability":3.41,"courseScore":3.21,"experience":3.23,"par":72.0,"distance":6670.0,"index":73.6,"slope":139.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":51,"name":"Firewheel Golf Park - Lakes Course","timesPlayed":2.0,"maintenance":3.25,"fairways":3.25,"rough":3.25,"bunkers":3.25,"greens":3.5,"layout":3.0,"difficulty":4.5,"aura":2.0,"range":3.75,"clubhouse":2.5,"playability":4.09,"courseScore":3.18,"experience":3.19,"par":72.0,"distance":7134.0,"index":75.5,"slope":139.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":52,"name":"Luna Vista Golf Course","timesPlayed":6.0,"maintenance":3.5,"fairways":3.5,"rough":3.75,"bunkers":3.75,"greens":3.75,"layout":3.0,"difficulty":2.0,"aura":2.0,"range":3.75,"clubhouse":3.5,"playability":2.94,"courseScore":3.18,"experience":3.22,"par":72.0,"distance":6847.0,"index":72.8,"slope":128.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":53,"name":"Southern Oaks Golf Club","timesPlayed":0,"maintenance":3.0,"fairways":2.75,"rough":3.0,"bunkers":3.0,"greens":3.0,"layout":3.0,"difficulty":4.75,"aura":3.0,"range":3.0,"clubhouse":3.0,"playability":4.25,"courseScore":3.17,"experience":3.17,"par":72.0,"distance":7311.0,"index":76.0,"slope":135.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":54,"name":"Meadowbrook","timesPlayed":3.0,"maintenance":3.25,"fairways":3.0,"rough":3.0,"bunkers":3.0,"greens":3.0,"layout":3.0,"difficulty":1.75,"aura":3.25,"range":3.0,"clubhouse":3.0,"playability":2.32,"courseScore":2.97,"experience":3.0,"par":71.0,"distance":6363.0,"index":70.2,"slope":126.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":55,"name":"Rockwood Park Golf Course","timesPlayed":0,"maintenance":3.0,"fairways":3.0,"rough":3.0,"bunkers":3.0,"greens":3.0,"layout":3.0,"difficulty":2.75,"aura":3.0,"range":3.0,"clubhouse":3.0,"playability":3.42,"courseScore":3.07,"experience":3.07,"par":72.0,"distance":7053.0,"index":73.7,"slope":120.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":56,"name":"Split Rail Golf Course","timesPlayed":0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.5,"layout":2.5,"difficulty":4.75,"aura":2.75,"range":2.5,"clubhouse":2.5,"playability":4.08,"courseScore":2.81,"experience":2.77,"par":72.0,"distance":7353.0,"index":76.2,"slope":138.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":57,"name":"Iron Horse Golf Club","timesPlayed":1.0,"maintenance":1.75,"fairways":2.75,"rough":3.0,"bunkers":4.0,"greens":3.0,"layout":3.0,"difficulty":4.0,"aura":3.0,"range":3.5,"clubhouse":3.5,"playability":3.81,"courseScore":2.97,"experience":3.0,"par":71.0,"distance":7028.0,"index":73.6,"slope":144.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":58,"name":"Lake Arlington Golf Course","timesPlayed":0,"maintenance":3.0,"fairways":3.0,"rough":3.0,"bunkers":3.0,"greens":3.0,"layout":3.0,"difficulty":2.0,"aura":3.0,"range":3.0,"clubhouse":3.0,"playability":2.69,"courseScore":2.95,"experience":2.95,"par":71.0,"distance":6618.0,"index":72.3,"slope":122.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":59,"name":"Mesquite Golf Club","timesPlayed":1.0,"maintenance":2.75,"fairways":2.75,"rough":2.75,"bunkers":3.5,"greens":5.0,"layout":2.75,"difficulty":3.0,"aura":2.0,"range":3.5,"clubhouse":3.0,"playability":3.09,"courseScore":2.93,"experience":2.95,"par":71.0,"distance":6753.0,"index":74.2,"slope":128.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":60,"name":"Hawks Creek","timesPlayed":0,"maintenance":2.75,"fairways":2.75,"rough":2.75,"bunkers":2.75,"greens":2.75,"layout":2.75,"difficulty":3.5,"aura":2.75,"range":2.75,"clubhouse":2.75,"playability":3.41,"courseScore":2.86,"experience":2.84,"par":72.0,"distance":6898.0,"index":74.0,"slope":134.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":61,"name":"Old Brickyard Golf Course","timesPlayed":3.0,"maintenance":3.0,"fairways":2.75,"rough":2.75,"bunkers":2.75,"greens":3.0,"layout":2.0,"difficulty":1.75,"aura":4.0,"range":3.0,"clubhouse":3.0,"playability":2.12,"courseScore":2.85,"experience":2.85,"par":71.0,"distance":6486.0,"index":70.6,"slope":125.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":62,"name":"Golf Club of Dallas","timesPlayed":4.0,"maintenance":2.25,"fairways":2.25,"rough":2.25,"bunkers":2.25,"greens":2.25,"layout":1.75,"difficulty":2.75,"aura":4.0,"range":3.0,"clubhouse":3.0,"playability":2.63,"courseScore":2.56,"experience":2.56,"par":72.0,"distance":6719.0,"index":72.7,"slope":133.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":63,"name":"Oak Hollow Golf Course","timesPlayed":0,"maintenance":2.75,"fairways":2.75,"rough":2.75,"bunkers":2.75,"greens":2.75,"layout":2.75,"difficulty":2.0,"aura":2.75,"range":2.75,"clubhouse":2.75,"playability":2.67,"courseScore":2.74,"experience":2.72,"par":70.0,"distance":6679.0,"index":72.3,"slope":121.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":64,"name":"Whitestone Golf Club","timesPlayed":0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.5,"layout":2.5,"difficulty":4.0,"aura":2.5,"range":2.5,"clubhouse":2.5,"playability":3.74,"courseScore":2.71,"experience":2.67,"par":72.0,"distance":7117.0,"index":74.7,"slope":135.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":65,"name":"Prairie Lakes Golf Course","timesPlayed":1.0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":3.0,"layout":2.5,"difficulty":2.0,"aura":3.0,"range":2.75,"clubhouse":2.75,"playability":2.54,"courseScore":2.63,"experience":2.62,"par":71.0,"distance":6640.0,"index":71.7,"slope":126.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":66,"name":"Cleburne Golf Links","timesPlayed":0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.5,"layout":2.5,"difficulty":2.5,"aura":2.5,"range":2.5,"clubhouse":2.5,"playability":3.19,"courseScore":2.61,"experience":2.58,"par":72.0,"distance":7068.0,"index":73.7,"slope":128.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":67,"name":"Country View Golf Club","timesPlayed":1.0,"maintenance":3.25,"fairways":3.0,"rough":3.25,"bunkers":2.5,"greens":3.25,"layout":2.75,"difficulty":1.75,"aura":1.75,"range":3.25,"clubhouse":3.5,"playability":2.43,"courseScore":2.72,"experience":2.74,"par":70.0,"distance":6534.0,"index":71.0,"slope":128.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":68,"name":"Cedar Creek Country Club","timesPlayed":0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.5,"layout":2.5,"difficulty":2.0,"aura":2.5,"range":2.5,"clubhouse":2.5,"playability":2.74,"courseScore":2.54,"experience":2.51,"par":72.0,"distance":6819.0,"index":72.3,"slope":125.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":69,"name":"Tenison Park Golf Course - Glen Course","timesPlayed":10.0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":null,"greens":2.5,"layout":2.5,"difficulty":2.0,"aura":2.5,"range":3.0,"clubhouse":3.25,"playability":2.51,"courseScore":2.5,"experience":2.51,"par":72.0,"distance":6607.0,"index":71.8,"slope":119.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":70,"name":"Keeton Park Golf Course","timesPlayed":5.0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.75,"layout":2.25,"difficulty":2.0,"aura":2.5,"range":3.25,"clubhouse":2.75,"playability":2.33,"courseScore":2.47,"experience":2.47,"par":72.0,"distance":6521.0,"index":71.5,"slope":122.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":71,"name":"Stone River Golf Club","timesPlayed":1.0,"maintenance":2.5,"fairways":2.5,"rough":3.0,"bunkers":null,"greens":2.5,"layout":1.75,"difficulty":1.75,"aura":2.5,"range":3.25,"clubhouse":3.0,"playability":1.98,"courseScore":2.39,"experience":2.39,"par":72.0,"distance":6432.0,"index":69.4,"slope":114.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":72,"name":"Webb Hill Country Club","timesPlayed":0,"maintenance":2.0,"fairways":2.0,"rough":2.0,"bunkers":2.0,"greens":2.0,"layout":2.0,"difficulty":2.25,"aura":2.0,"range":2.0,"clubhouse":2.0,"playability":2.62,"courseScore":2.1,"experience":2.04,"par":72.0,"distance":6787.0,"index":73.3,"slope":130.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":73,"name":"Kings Creek Golf Club","timesPlayed":0,"maintenance":2.0,"fairways":2.0,"rough":2.0,"bunkers":2.0,"greens":2.0,"layout":2.0,"difficulty":2.0,"aura":2.0,"range":2.0,"clubhouse":2.0,"playability":2.23,"courseScore":2.04,"experience":1.97,"par":71.0,"distance":6507.0,"index":72.0,"slope":124.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":74,"name":"The Club at Frisco Farms","timesPlayed":4.0,"maintenance":1.5,"fairways":2.5,"rough":1.25,"bunkers":2.0,"greens":2.5,"layout":2.5,"difficulty":1.75,"aura":1.5,"range":4.25,"clubhouse":4.5,"playability":2.17,"courseScore":1.97,"experience":2.06,"par":72.0,"distance":6375.0,"index":70.9,"slope":122.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":75,"name":"Duck Creek Golf Club","timesPlayed":1.0,"maintenance":2.0,"fairways":2.0,"rough":3.0,"bunkers":2.0,"greens":2.0,"layout":2.0,"difficulty":2.0,"aura":1.0,"range":2.5,"clubhouse":1.0,"playability":2.25,"courseScore":1.96,"experience":1.87,"par":71.0,"distance":6523.0,"index":71.9,"slope":123.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":76,"name":"Riverchase Golf Club","timesPlayed":5.0,"maintenance":1.25,"fairways":2.0,"rough":1.5,"bunkers":1.0,"greens":2.75,"layout":3.0,"difficulty":2.75,"aura":1.0,"range":3.0,"clubhouse":3.25,"playability":2.91,"courseScore":1.88,"experience":1.89,"par":71.0,"distance":6593.0,"index":72.5,"slope":133.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":77,"name":"Deer Run Golf Club","timesPlayed":0,"maintenance":1.75,"fairways":1.75,"rough":1.75,"bunkers":1.75,"greens":1.75,"layout":1.75,"difficulty":1.75,"aura":1.75,"range":1.75,"clubhouse":1.75,"playability":2.31,"courseScore":1.84,"experience":1.76,"par":72.0,"distance":6727.0,"index":72.0,"slope":116.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":78,"name":"Grand Oaks Golf Club","timesPlayed":1.0,"maintenance":2.0,"fairways":1.5,"rough":2.5,"bunkers":1.5,"greens":1.0,"layout":2.0,"difficulty":2.0,"aura":1.0,"range":2.5,"clubhouse":4.0,"playability":2.73,"courseScore":1.79,"experience":1.8,"par":71.0,"distance":6953.0,"index":73.1,"slope":125.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":79,"name":"Lake Park Golf Club","timesPlayed":0,"maintenance":1.75,"fairways":1.75,"rough":1.75,"bunkers":1.75,"greens":1.75,"layout":1.75,"difficulty":1.75,"aura":1.75,"range":1.75,"clubhouse":1.75,"playability":1.65,"courseScore":1.73,"experience":1.65,"par":70.0,"distance":6135.0,"index":68.3,"slope":108.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]},{"rank":80,"name":"Waxahachie Golf Club","timesPlayed":1.0,"maintenance":1.0,"fairways":1.5,"rough":1.75,"bunkers":null,"greens":1.0,"layout":1.0,"difficulty":1.0,"aura":1.0,"range":0.0,"clubhouse":1.0,"playability":1.17,"courseScore":1.2,"experience":1.03,"par":70.0,"distance":6156.0,"index":68.5,"slope":104.0,"wdMorning":null,"wdAfternoon":null,"wdTwilight":null,"weMorning":null,"weAfternoon":null,"weTwilight":null,"review":"","photos":[]}];
+
+// ── STORAGE ──
+function ls(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch{ return null; } }
+function lss(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+
+function loadStore(){ return ls('thecard_store') || {}; }
+function saveStore(s){ lss('thecard_store',s); }
+
+function loadTiers(){ return ls('thecard_tiers') || [10,25,45,60]; }
+function saveTiers(t){ lss('thecard_tiers',t); }
+
+function loadExtraCourses(){ return ls('thecard_extra') || []; }
+function saveExtraCourses(arr){ lss('thecard_extra',arr); }
+
+function loadExtraTabs(){ return ls('thecard_tabs') || []; }
+function saveExtraTabs(arr){ lss('thecard_tabs',arr); }
+
+function mergeData(){
+  const store = loadStore();
+  const extra = loadExtraCourses();
+  const merged = [...BASE_DATA, ...extra].map(c => {
+    const s = store[c.name];
+    return s ? {...c,...s} : {...c};
+  });
+  return merged;
+}
+
+let DATA = mergeData();
+
+// ── VALUE CALC ──
+function calcValueRatings(){
+  DATA.forEach(c => {
+    const prices = ['wdMorning','wdAfternoon','wdTwilight','weMorning','weAfternoon','weTwilight']
+      .map(k => parseFloat(String(c[k]||'').replace(/[^0-9.]/g,'')))
+      .filter(p => !isNaN(p) && p > 0);
+    c._valueMeasure = (prices.length > 0 && c.experience) ? c.experience / (prices.reduce((s,p)=>s+p,0)/prices.length) : null;
+  });
+  const ranked = DATA.filter(c=>c._valueMeasure!=null).sort((a,b)=>b._valueMeasure-a._valueMeasure);
+  const n = ranked.length;
+  ranked.forEach((c,i) => {
+    const pct = n > 1 ? i/(n-1) : 0;
+    c.value = 5.0 - Math.round(pct*16)*0.25;
+  });
+  DATA.filter(c=>c._valueMeasure==null).forEach(c=>{ c.value=null; });
+}
+calcValueRatings();
+
+// ── FORMULAS ──
+function calcCourse(c){
+  const g = k => parseFloat(c[k])||0;
+  const ad = (g('maintenance')+g('fairways')+g('clubhouse')+g('difficulty'))/4;
+  const as_ = (g('rough')+g('bunkers')+g('greens')+g('layout'))/4;
+  return Math.round(((ad*2+as_)/3)*100)/100;
+}
+function calcExp(c,cs){ return Math.round((cs+((parseFloat(c.range)||0)+(parseFloat(c.clubhouse)||0)-6)/30)*100)/100; }
+
+// ── HELPERS ──
+const RKEYS = ['maintenance','fairways','rough','bunkers','greens','layout','difficulty','aura','range','clubhouse'];
+const RLABELS = {maintenance:'Maintenance',fairways:'Fairways',rough:'Rough / Waste',bunkers:'Bunkers',greens:'Greens',layout:'Layout',difficulty:'Difficulty',aura:'Aura',range:'Range',clubhouse:'Clubhouse / Bar'};
+
+function sc(v){ if(v==null) return ''; if(v>=4.5) return 'c5'; if(v>=4) return 'c4'; if(v>=3.5) return 'c35'; if(v>=3) return 'c3'; if(v>=2) return 'c2'; return 'c1'; }
+function fmt(v,d=2){ return v!=null ? Number(v).toFixed(d) : '—'; }
+function fp(v){ return v ? String(v) : '—'; }
+
+function updateStats(){
+  const rounds = DATA.reduce((s,c)=>s+(c.timesPlayed||0),0);
+  const avg = DATA.reduce((s,c)=>s+(c.experience||0),0)/DATA.length;
+  document.getElementById('statCourses').textContent = DATA.length;
+  document.getElementById('statRounds').textContent = rounds;
+  document.getElementById('statAvg').textContent = avg.toFixed(2);
+  document.getElementById('navCount').textContent = DATA.length;
+}
+updateStats();
+
+// ── TIERS UI ──
+let tiers = loadTiers();
+
+function renderTiersUI(){
+  const wrap = document.getElementById('tiersWrap');
+  wrap.innerHTML = '';
+  tiers.forEach((t,i) => {
+    const tag = document.createElement('div');
+    tag.className = 'tier-tag';
+    tag.innerHTML = `<span class="tier-tag-label">T${i+1}→</span><input type="number" min="1" max="999" value="${t}" data-ti="${i}"><button class="tier-tag-del" data-ti="${i}" title="Remove">✕</button>`;
+    wrap.appendChild(tag);
+  });
+  wrap.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const i = parseInt(e.target.dataset.ti);
+      tiers[i] = parseInt(e.target.value)||tiers[i];
+      saveTiers(tiers);
+      renderTable();
+    });
+  });
+  wrap.querySelectorAll('.tier-tag-del').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const i = parseInt(e.target.dataset.ti);
+      tiers.splice(i,1);
+      saveTiers(tiers);
+      renderTiersUI();
+setTierLock(true); // locked by default until unlocked
+      renderTable();
+    });
+  });
+}
+renderTiersUI();
+setTierLock(true); // locked by default until unlocked
+
+document.getElementById('addTierBtn').addEventListener('click', () => {
+  const last = tiers.length > 0 ? tiers[tiers.length-1] : 0;
+  tiers.push(Math.min(last+10, DATA.length-1));
+  saveTiers(tiers);
+  renderTiersUI();
+setTierLock(true); // locked by default until unlocked
+  renderTable();
+});
+
+// ── TABLE ──
+let sortCol='rank', sortAsc=true, searchTerm='', filteredData=[];
+
+function renderTable(){
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  let rows = [...DATA].filter(c => !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  if(sortCol==='name') rows.sort((a,b)=>sortAsc?a.name.localeCompare(b.name):b.name.localeCompare(a.name));
+  else rows.sort((a,b)=>{ const av=a[sortCol]??(sortAsc?Infinity:-Infinity), bv=b[sortCol]??(sortAsc?Infinity:-Infinity); return sortAsc?av-bv:bv-av; });
+  filteredData = rows;
+  document.getElementById('countBadge').textContent = `${rows.length} course${rows.length!==1?'s':''}`;
+
+  const sortedTiers = [...tiers].sort((a,b)=>a-b);
+  const tierLabels = ['Tier 1','Tier 2','Tier 3','Tier 4','Tier 5','Tier 6','Tier 7','Tier 8'];
+  let inserted = new Set();
+
+  rows.forEach((c,idx) => {
+    if(sortCol==='rank' && sortAsc && !searchTerm){
+      sortedTiers.forEach((cut,ti) => {
+        if(c.rank===cut+1 && !inserted.has(cut)){
+          inserted.add(cut);
+          const div = document.createElement('tr');
+          div.className = 'tier-div';
+          div.innerHTML = `<td colspan="24">${tierLabels[ti+1] || 'Tier '+(ti+2)}</td>`;
+          tbody.appendChild(div);
+        }
+      });
+    }
+    const rk=c.rank, rc=rk===1?'r1':rk<=3?'r2':rk<=10?'r3':'';
+    const tc = rk<=sortedTiers[0]?'tr-t1':rk<=sortedTiers[1]?'tr-t2':rk<=(sortedTiers[2]||999)?'tr-t3':'';
+    const tr = document.createElement('tr');
+    if(tc) tr.className=tc;
+    tr.innerHTML=`
+      <td class="td-rank ${rc}">${c.rank}</td>
+      <td><div class="td-name">${c.name}</div><div class="td-sub">Par ${c.par||'—'} · ${c.distance?Math.round(c.distance)+' yds':'—'} · Slp ${c.slope||'—'}</div></td>
+      <td class="td-num">${c.timesPlayed>0?c.timesPlayed:'—'}</td>
+      <td class="td-score ${sc(c.experience)}">${fmt(c.experience)}</td>
+      <td class="td-score ${sc(c.courseScore)}">${fmt(c.courseScore)}</td>
+      <td class="td-score ${sc(c.playability)}">${fmt(c.playability)}</td>
+      <td class="td-num">${c.value!=null?fmt(c.value):'—'}</td>
+      <td class="td-score ${sc(c.maintenance)}">${fmt(c.maintenance)}</td>
+      <td class="td-score ${sc(c.fairways)}">${fmt(c.fairways)}</td>
+      <td class="td-score ${sc(c.rough)}">${fmt(c.rough)}</td>
+      <td class="td-score ${sc(c.bunkers)}">${fmt(c.bunkers)}</td>
+      <td class="td-score ${sc(c.greens)}">${fmt(c.greens)}</td>
+      <td class="td-score ${sc(c.layout)}">${fmt(c.layout)}</td>
+      <td class="td-score ${sc(c.difficulty)}">${fmt(c.difficulty)}</td>
+      <td class="td-score ${sc(c.aura)}">${fmt(c.aura)}</td>
+      <td class="td-score ${sc(c.range)}">${fmt(c.range)}</td>
+      <td class="td-score ${sc(c.clubhouse)}">${fmt(c.clubhouse)}</td>
+      <td class="td-num">${c.par||'—'}</td>
+      <td class="td-num">${c.distance?Math.round(c.distance):'—'}</td>
+      <td class="td-num">${c.index||'—'}</td>
+      <td class="td-num">${c.slope||'—'}</td>
+      <td class="td-num">${fp(c.wdMorning)}</td>
+      <td class="td-num">${fp(c.wdAfternoon)}</td>
+      <td class="td-num">${fp(c.wdTwilight)}</td>
+      <td class="td-num">${fp(c.weMorning)}</td>
+      <td class="td-num">${fp(c.weAfternoon)}</td>
+      <td class="td-num">${fp(c.weTwilight)}</td>
+      <td style="color:var(--gold);font-size:.72rem;opacity:0;transition:opacity .15s" class="ac">→</td>
+    `;
+    tr.addEventListener('mouseenter',()=>tr.querySelector('.ac').style.opacity='1');
+    tr.addEventListener('mouseleave',()=>tr.querySelector('.ac').style.opacity='0');
+    tr.addEventListener('click',()=>openModal(idx));
+    tbody.appendChild(tr);
+  });
+}
+
+document.querySelectorAll('th[data-col]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const col=th.dataset.col;
+    sortCol===col ? sortAsc=!sortAsc : (sortCol=col, sortAsc=col==='rank'||col==='name');
+    document.querySelectorAll('th').forEach(t=>t.classList.remove('sorted'));
+    th.classList.add('sorted');
+    document.getElementById('sortSel').value=col;
+    renderTable();
+  });
+});
+document.getElementById('sortSel').addEventListener('change',e=>{ sortCol=e.target.value; sortAsc=sortCol==='rank'||sortCol==='name'; renderTable(); });
+document.getElementById('search').addEventListener('input',e=>{ searchTerm=e.target.value; renderTable(); });
+
+// ── PASSWORD ──
+function openPw(cb){
+  pendingUnlock=cb;
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwError').textContent='';
+  document.getElementById('pwOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('pwInput').focus(),80);
+}
+function closePw(){ document.getElementById('pwOverlay').classList.remove('open'); }
+
+function tryUnlock(){
+  if(document.getElementById('pwInput').value===PASSWORD){
+    unlocked=true;
+    document.getElementById('lockBtn').textContent='🔓';
+    document.getElementById('editToggle').classList.remove('hidden');
+    document.getElementById('addCourseBtn').classList.add('visible');
+    document.getElementById('navAddTab').classList.remove('hidden');
+    setTierLock(false);
+    closePw();
+    showToast('Editing unlocked ✓');
+    if(pendingUnlock){ pendingUnlock(); pendingUnlock=null; }
+  } else {
+    document.getElementById('pwError').textContent='Incorrect password';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+}
+function setTierLock(locked){
+  document.querySelectorAll('.tier-tag input').forEach(i=>{ i.readOnly=locked; });
+  document.querySelectorAll('.tier-tag-del').forEach(b=>{ b.style.display=locked?'none':''; });
+  document.getElementById('addTierBtn').style.display=locked?'none':'';
+}
+function doLock(){
+  unlocked=false;
+  editMode=false;
+  document.getElementById('lockBtn').textContent='🔒';
+  document.getElementById('editToggle').classList.add('hidden');
+  document.getElementById('addCourseBtn').classList.remove('visible');
+  document.getElementById('navAddTab').classList.add('hidden');
+  setTierLock(true);
+  const mb=document.getElementById('modalBody');
+  if(mb) mb.classList.remove('edit-mode');
+  const et=document.getElementById('editToggle');
+  et.classList.remove('on'); et.textContent='✏️ Edit';
+  document.getElementById('modalHero').classList.remove('edit-mode');
+}
+
+document.getElementById('lockBtn').addEventListener('click',()=>{ unlocked ? doLock() : openPw(null); });
+document.getElementById('pwBtn').addEventListener('click',tryUnlock);
+document.getElementById('pwInput').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlock(); });
+document.getElementById('pwCancel').addEventListener('click',closePw);
+
+// ── MODAL ──
+let currentIdx=0, editMode=false;
+
+function openModal(idx){
+  currentIdx=idx; editMode=false;
+  const c=filteredData[idx];
+  document.getElementById('modalTopTitle').textContent=`#${c.rank} of ${DATA.length}`;
+  document.getElementById('modalHero').dataset.num=`#${c.rank}`;
+  document.getElementById('modalHero').classList.remove('edit-mode');
+  document.getElementById('modalEyebrow').textContent=`Ranked #${c.rank} · ${c.timesPlayed>0?c.timesPlayed+' rounds played':'Not yet played'}`;
+  document.getElementById('modalTitle').textContent=c.name;
+  document.getElementById('modalTitleEdit').value=c.name;
+  document.getElementById('metaStrip').innerHTML=`
+    <div class="meta-item"><div class="meta-l">Experience</div><div class="meta-v">${fmt(c.experience)}</div></div>
+    <div class="meta-item"><div class="meta-l">Course Score</div><div class="meta-v">${fmt(c.courseScore)}</div></div>
+    <div class="meta-item"><div class="meta-l">Value ★</div><div class="meta-v">${c.value!=null?fmt(c.value):'—'}</div></div>
+    <div class="meta-item"><div class="meta-l">Rounds</div><div class="meta-v">${c.timesPlayed>0?c.timesPlayed:'—'}</div></div>
+  `;
+  const et=document.getElementById('editToggle');
+  unlocked ? et.classList.remove('hidden') : et.classList.add('hidden');
+  et.classList.remove('on'); et.textContent='✏️ Edit';
+  renderModalBody(c,idx);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('overlay').scrollTop=0;
+  setTimeout(()=>{ document.querySelectorAll('.r-bar-fg').forEach(b=>{ const w=b.style.width; b.style.width='0'; setTimeout(()=>b.style.width=w,40); }); },30);
+}
+
+function renderModalBody(c,idx){
+  const photosHtml = (c.photos&&c.photos.length>0)
+    ? `<div class="photos-grid">${c.photos.map(p=>`<img src="${p}" onerror="this.style.display='none'">`).join('')}</div>`
+    : `<div class="no-photos">No photos yet — add URLs in edit mode</div>`;
+
+  const reviewHtml = c.review
+    ? `<div class="review-view review-box">${c.review.split('\n').filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('')}</div>`
+    : `<div class="review-view no-review">No written review yet</div>`;
+
+  const ratingsHtml = RKEYS.map(k=>{
+    const v=c[k]; const pct=v!=null?(v/5)*100:0;
+    return `<div class="r-cell"><div class="r-label">${RLABELS[k]}</div><div class="r-row">
+      <div class="r-bar-bg"><div class="r-bar-fg" style="width:${pct}%"></div></div>
+      <div class="r-val">${v!=null?v.toFixed(2):'—'}</div>
+      <input class="r-edit" data-key="${k}" type="number" min="0" max="5" step="0.25" value="${v!=null?v:''}">
+    </div></div>`;
+  }).join('');
+
+  const pd=(k)=>`<span class="p-display">${fp(c[k])}</span><input class="p-edit" data-key="${k}" value="${c[k]||''}" placeholder="$0">`;
+  const prevD=idx===0?'disabled':'', nextD=idx===filteredData.length-1?'disabled':'';
+
+  document.getElementById('modalBody').innerHTML=`
+    <div class="section-label">Photos</div>
+    ${photosHtml}
+    <div class="photo-wrap"><textarea id="photoInput" placeholder="One photo URL per line&#10;https://i.imgur.com/example.jpg">${(c.photos||[]).join('\n')}</textarea><div class="photo-hint">Upload to Imgur.com or Google Photos, then paste the direct image URL here.</div></div>
+
+    <div class="section-label">Written Review</div>
+    ${reviewHtml}
+    <textarea class="review-edit" id="reviewInput" placeholder="Write your review here...">${c.review||''}</textarea>
+
+    <div class="section-label">Score Summary</div>
+    <div class="score-trio">
+      <div class="s-item"><div class="s-label">Experience</div><div class="s-val" id="liveExp">${fmt(c.experience)}</div></div>
+      <div class="s-item"><div class="s-label">Course Score</div><div class="s-val" id="liveCourse">${fmt(c.courseScore)}</div></div>
+      <div class="s-item"><div class="s-label">Playability</div><div class="s-val">${fmt(c.playability)}</div></div>
+    </div>
+
+    <div class="section-label">Rating Breakdown</div>
+    <div class="ratings-grid" id="ratingsGrid">${ratingsHtml}</div>
+
+    <div class="section-label">Green Fees</div>
+    <table class="pricing-table">
+      <thead><tr><th></th><th>Morning</th><th>Afternoon</th><th>Twilight</th></tr></thead>
+      <tbody>
+        <tr><td>Weekday</td><td>${pd('wdMorning')}</td><td>${pd('wdAfternoon')}</td><td>${pd('wdTwilight')}</td></tr>
+        <tr><td>Weekend</td><td>${pd('weMorning')}</td><td>${pd('weAfternoon')}</td><td>${pd('weTwilight')}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-label">Course Details</div>
+    <div class="detail-grid">
+      ${[['Par','par','number','1'],['Distance (yds)','distance','number','1'],['Course Index','index','number','0.1'],['Slope','slope','number','1'],['Rounds Played','timesPlayed','number','1'],['Rank','rank','number','1'],['Playability','playability','number','0.01'],['Value ★','value','','']].map(([lbl,key,type,step])=>
+        key==='value'
+          ? `<div class="d-item"><div class="d-label">${lbl}</div><div class="d-val">${c[key]!=null?fmt(c[key]):'Auto'}</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:.52rem;color:var(--gray);margin-top:.2rem">Auto-calculated</div></div>`
+          : `<div class="d-item"><div class="d-label">${lbl}</div><div class="d-val">${key==='distance'&&c[key]?Math.round(c[key]):c[key]||'—'}</div><input class="d-edit" data-key="${key}" type="${type}" step="${step}" value="${c[key]||''}"></div>`
+      ).join('')}
+    </div>
+
+    <button class="save-btn" id="saveBtn">Save All Changes</button>
+    <button class="delete-btn" id="deleteBtn">🗑 Delete This Course</button>
+
+    <div class="modal-nav">
+      <button class="mnav-btn" ${prevD} onclick="openModal(${idx-1})">← Previous</button>
+      <button class="mnav-btn" ${nextD} onclick="openModal(${idx+1})">Next →</button>
+    </div>
+  `;
+
+  // Live recalc
+  document.querySelectorAll('.r-edit').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const tmp={...c}; document.querySelectorAll('.r-edit').forEach(i=>{ const v=parseFloat(i.value); if(!isNaN(v)) tmp[i.dataset.key]=v; });
+      const cs=calcCourse(tmp); document.getElementById('liveCourse').textContent=cs.toFixed(2);
+      document.getElementById('liveExp').textContent=calcExp(tmp,cs).toFixed(2);
+    });
+  });
+
+  // Save
+  document.getElementById('saveBtn').addEventListener('click',()=>{
+    const store=loadStore(); const changes={};
+    document.querySelectorAll('.r-edit').forEach(i=>{ const v=parseFloat(i.value); if(!isNaN(v)) changes[i.dataset.key]=Math.min(5,Math.max(0,v)); });
+    const tmp={...c,...changes}; const cs=calcCourse(tmp);
+    changes.courseScore=cs; changes.experience=calcExp(tmp,cs);
+    document.querySelectorAll('.p-edit').forEach(i=>{ if(i.value.trim()) changes[i.dataset.key]=i.value.trim(); });
+    document.querySelectorAll('.d-edit').forEach(i=>{ const v=parseFloat(i.value); if(!isNaN(v)) changes[i.dataset.key]=v; });
+    changes.review = document.getElementById('reviewInput').value.trim();
+    const ph = document.getElementById('photoInput').value.trim();
+    changes.photos = ph ? ph.split('\n').map(l=>l.trim()).filter(Boolean) : [];
+    const newName = document.getElementById('modalTitleEdit').value.trim();
+    if(newName && newName!==c.name){ changes._renamed={from:c.name,to:newName}; changes.name=newName; }
+    store[newName||c.name]={...(store[c.name]||{}),...changes};
+    if(newName && newName!==c.name) delete store[c.name];
+    saveStore(store);
+    DATA=mergeData(); calcValueRatings(); renderTable(); updateStats();
+    openModal(currentIdx);
+    showToast('Saved ✓');
+  });
+
+  // Delete
+  document.getElementById('deleteBtn').addEventListener('click',()=>{
+    if(!confirm(`Delete "${c.name}" from your rankings?`)) return;
+    const store=loadStore(); delete store[c.name];
+    const extra=loadExtraCourses().filter(e=>e.name!==c.name);
+    saveExtraCourses(extra); saveStore(store);
+    DATA=mergeData(); calcValueRatings(); renderTable(); updateStats();
+    document.getElementById('overlay').classList.remove('open');
+    showToast('Course deleted');
+  });
+}
+
+// Edit toggle
+document.getElementById('editToggle').addEventListener('click',()=>{
+  if(!unlocked){ openPw(()=>{ editMode=true; activateEdit(); }); return; }
+  editMode=!editMode;
+  editMode ? activateEdit() : deactivateEdit();
+});
+function activateEdit(){
+  editMode=true;
+  const et=document.getElementById('editToggle'); et.classList.add('on'); et.textContent='✓ Editing';
+  document.getElementById('modalBody').classList.add('edit-mode');
+  document.getElementById('modalHero').classList.add('edit-mode');
+}
+function deactivateEdit(){
+  editMode=false;
+  const et=document.getElementById('editToggle'); et.classList.remove('on'); et.textContent='✏️ Edit';
+  document.getElementById('modalBody').classList.remove('edit-mode');
+  document.getElementById('modalHero').classList.remove('edit-mode');
+}
+
+// Close modal
+document.getElementById('closeBtn').addEventListener('click',()=>{ document.getElementById('overlay').classList.remove('open'); editMode=false; });
+document.getElementById('overlay').addEventListener('click',e=>{ if(e.target===document.getElementById('overlay')){ document.getElementById('overlay').classList.remove('open'); editMode=false; } });
+
+// ── ADD COURSE ──
+document.getElementById('addCourseBtn').addEventListener('click',()=>{
+  if(!unlocked){ openPw(()=>document.getElementById('addOverlay').classList.add('open')); return; }
+  document.getElementById('addOverlay').classList.add('open');
+});
+document.getElementById('acCancelBtn').addEventListener('click',()=>document.getElementById('addOverlay').classList.remove('open'));
+document.getElementById('acSaveBtn').addEventListener('click',()=>{
+  const name=document.getElementById('ac-name').value.trim();
+  if(!name){ alert('Course name is required'); return; }
+  const sf=id=>{ const v=parseFloat(document.getElementById(id).value); return isNaN(v)?null:v; };
+  const newCourse={
+    rank: sf('ac-rank') || DATA.length+1,
+    name, timesPlayed: sf('ac-played')||0,
+    par: sf('ac-par'), distance: sf('ac-dist'), index: sf('ac-index'), slope: sf('ac-slope'),
+    maintenance:null,fairways:null,rough:null,bunkers:null,greens:null,
+    layout:null,difficulty:null,aura:null,range:null,clubhouse:null,
+    playability:null,courseScore:null,experience:null,value:null,
+    wdMorning:null,wdAfternoon:null,wdTwilight:null,weMorning:null,weAfternoon:null,weTwilight:null,
+    review:'',photos:[],
+  };
+  const extra=loadExtraCourses(); extra.push(newCourse); saveExtraCourses(extra);
+  DATA=mergeData(); calcValueRatings(); renderTable(); updateStats();
+  document.getElementById('addOverlay').classList.remove('open');
+  ['ac-name','ac-par','ac-dist','ac-index','ac-slope','ac-played','ac-rank'].forEach(id=>document.getElementById(id).value='');
+  showToast(`"${name}" added ✓`);
+});
+
+// ── ADD TAB ──
+document.getElementById('navAddTab').addEventListener('click',()=>{
+  document.getElementById('addTabOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('at-name').focus(),80);
+});
+document.getElementById('atCancelBtn').addEventListener('click',()=>document.getElementById('addTabOverlay').classList.remove('open'));
+document.getElementById('atSaveBtn').addEventListener('click',()=>{
+  const name=document.getElementById('at-name').value.trim();
+  if(!name) return;
+  const slug='custom-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  const tabs=loadExtraTabs(); tabs.push({name,slug}); saveExtraTabs(tabs);
+  addTabToNav(name,slug);
+  document.getElementById('addTabOverlay').classList.remove('open');
+  document.getElementById('at-name').value='';
+  showToast(`Tab "${name}" added ✓`);
+});
+function addTabToNav(name,slug){
+  const pageId='page-'+slug;
+  if(!document.getElementById(pageId)){
+    const page=document.createElement('div');
+    page.className='page'; page.id=pageId;
+    page.innerHTML=`<div class="coming-soon"><div class="cs-icon">🏌️</div><div class="cs-title">${name}</div><div class="cs-sub">Send your data file to populate this tab</div></div>`;
+    document.body.appendChild(page);
+  }
+  const tab=document.createElement('div');
+  tab.className='nav-tab'; tab.dataset.page=slug; tab.dataset.label=name; tab.textContent=name;
+  tab.addEventListener('click',switchTab);
+  makeTabRenameable(tab);
+  document.getElementById('navTabs').insertBefore(tab, document.getElementById('navTabs').lastElementChild);
+}
+function switchTab(e){
+  const target=e.currentTarget||e;
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  target.classList.add('active');
+  const pg=document.getElementById('page-'+target.dataset.page);
+  if(pg) pg.classList.add('active');
+}
+function makeTabRenameable(tab){
+  tab.addEventListener('dblclick', e => {
+    if(!unlocked) return;
+    e.stopPropagation();
+    const old = tab.textContent;
+    const inp = document.createElement('input');
+    inp.value = old;
+    inp.style.cssText='background:transparent;border:none;border-bottom:1px solid var(--gold);color:var(--gold);font-family:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-transform:inherit;width:'+(old.length*9+20)+'px;outline:none;padding:0';
+    tab.textContent='';
+    tab.appendChild(inp);
+    inp.focus(); inp.select();
+    function done(){
+      const nv = inp.value.trim() || old;
+      tab.textContent = nv;
+      tab.dataset.label = nv;
+      // persist extra tabs
+      const tabs = loadExtraTabs().map(t => t.slug===tab.dataset.page ? {...t,name:nv} : t);
+      saveExtraTabs(tabs);
+      // update page title if coming-soon
+      const pg = document.getElementById('page-'+tab.dataset.page);
+      if(pg){ const ct = pg.querySelector('.cs-title'); if(ct) ct.textContent=nv; }
+    }
+    inp.addEventListener('blur', done);
+    inp.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key==='Escape') inp.blur(); });
+  });
+}
+document.querySelectorAll('.nav-tab').forEach(tab=>{ tab.addEventListener('click',switchTab); makeTabRenameable(tab); });
+loadExtraTabs().forEach(t=>addTabToNav(t.name,t.slug));
+
+// keyboard nav
+document.addEventListener('keydown',e=>{
+  const ov=document.getElementById('overlay');
+  const pw=document.getElementById('pwOverlay');
+  if(e.key==='Escape'){
+    if(pw.classList.contains('open')){ closePw(); return; }
+    if(document.getElementById('addOverlay').classList.contains('open')){ document.getElementById('addOverlay').classList.remove('open'); return; }
+    if(document.getElementById('addTabOverlay').classList.contains('open')){ document.getElementById('addTabOverlay').classList.remove('open'); return; }
+    ov.classList.remove('open'); editMode=false;
+  }
+  if(ov.classList.contains('open')&&!editMode){
+    if(e.key==='ArrowRight'&&currentIdx<filteredData.length-1) openModal(currentIdx+1);
+    if(e.key==='ArrowLeft'&&currentIdx>0) openModal(currentIdx-1);
+  }
+});
+
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+renderTable();
+
+// Set correct sticky header top after controls render
+function setTheadTop(){
+  const nav = document.querySelector('.nav');
+  const ctrl = document.getElementById('controls');
+  if(nav && ctrl){
+    const top = nav.offsetHeight + ctrl.offsetHeight;
+    document.documentElement.style.setProperty('--thead-top', top+'px');
+  }
+}
+setTheadTop();
+window.addEventListener('resize', setTheadTop);
+</script>
+</body>
+</html>
