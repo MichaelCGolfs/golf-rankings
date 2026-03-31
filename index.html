@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Golf Rankings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #0c0c0c;
+      --surface: #141414;
+      --surface2: #1c1c1c;
+      --border: rgba(255,255,255,0.07);
+      --gold: #c9a84c;
+      --gold-dim: rgba(201,168,76,0.18);
+      --white: #f0ebe0;
+      --gray: #888;
+      --gray-light: #bbb;
+      --green: #2a5c24;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── HEADER ── */
+    .hdr {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(12,12,12,0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 58px;
+    }
+    .hdr-logo {
+      font-family: 'Playfair Display', serif;
+      font-style: italic; font-size: 1.3rem; font-weight: 700;
+      color: var(--gold); letter-spacing: 0.01em;
+    }
+    .hdr-meta {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--gray);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 4rem 2rem 3rem;
+      max-width: 1400px; margin: 0 auto;
+      display: flex; align-items: flex-end; justify-content: space-between;
+      flex-wrap: wrap; gap: 2rem;
+    }
+    .hero-left h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 900; line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .hero-left h1 em { font-style: italic; color: var(--gold); }
+    .hero-left p {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--gray); margin-top: 0.75rem;
+    }
+    .hero-stats {
+      display: flex; gap: 2.5rem;
+    }
+    .stat-block { text-align: center; }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem; font-weight: 900; color: var(--gold); line-height: 1;
+    }
+    .stat-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gray); margin-top: 0.2rem;
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 2rem 1.5rem;
+      display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;
+    }
+    .search-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.85rem;
+      padding: 0.55rem 1rem;
+      width: 260px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus { border-color: var(--gold); }
+    .search-box::placeholder { color: var(--gray); }
+
+    .sort-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem; letter-spacing: 0.1em;
+      padding: 0.55rem 0.85rem;
+      cursor: pointer; outline: none;
+    }
+
+    .count-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem; letter-spacing: 0.12em;
+      color: var(--gray); margin-left: auto;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 2rem 6rem;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      min-width: 900px;
+    }
+    thead tr {
+      border-bottom: 1px solid var(--gold-dim);
+    }
+    th {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold);
+      padding: 0.6rem 0.75rem;
+      text-align: left; white-space: nowrap;
+      cursor: pointer; user-select: none;
+      transition: color 0.15s;
+    }
+    th:hover { color: var(--gold-light, #e8c96d); }
+    th.sorted { color: #e8c96d; }
+    th:first-child { text-align: center; width: 52px; }
+    th.num { text-align: center; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    tbody tr:hover { background: rgba(201,168,76,0.055); }
+    tbody tr.r1  { background: rgba(201,168,76,0.10); }
+    tbody tr.r2  { background: rgba(201,168,76,0.07); }
+    tbody tr.r3  { background: rgba(201,168,76,0.05); }
+
+    td {
+      padding: 0.85rem 0.75rem;
+      vertical-align: middle;
+    }
+    .td-rank {
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700; font-size: 1.05rem;
+      color: var(--gray);
+    }
+    .td-rank.g1 { color: var(--gold); font-size: 1.2rem; }
+    .td-rank.g2 { color: #c4b46a; }
+    .td-rank.g3 { color: #a89858; }
+
+    .td-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 1rem;
+      color: var(--white); letter-spacing: 0.01em;
+    }
+    .td-sub {
+      font-size: 0.68rem; letter-spacing: 0.08em;
+      color: var(--gray); margin-top: 0.1rem;
+    }
+
+    .td-score {
+      text-align: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+    }
+
+    /* score color scale */
+    .sc-5  { color: #4caf50; }
+    .sc-4  { color: #8bc34a; }
+    .sc-35 { color: #cddc39; }
+    .sc-3  { color: #ffc107; }
+    .sc-2  { color: #ff7043; }
+    .sc-1  { color: #ef5350; }
+
+    .mini-bar-wrap {
+      width: 44px; height: 3px;
+      background: rgba(255,255,255,0.08);
+      display: inline-block; vertical-align: middle;
+      margin-left: 4px;
+    }
+    .mini-bar-fill {
+      height: 100%; background: var(--gold); opacity: 0.7;
+    }
+
+    .td-price {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.8rem; color: var(--gray-light);
+      text-align: center;
+    }
+    .td-rounds {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.82rem; color: var(--gray-light);
+      text-align: center;
+    }
+
+    .arrow-icon {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem; color: var(--gold);
+      opacity: 0; transition: opacity 0.15s, transform 0.15s;
+      display: inline-block;
+    }
+    tbody tr:hover .arrow-icon { opacity: 1; transform: translateX(3px); }
+
+    /* ── DIVIDER ROWS ── */
+    .tier-divider td {
+      padding: 0.35rem 0.75rem;
+      background: var(--surface2);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--gold);
+      cursor: default;
+    }
+    .tier-divider:hover { background: var(--surface2) !important; }
+
+    /* ── MODAL / COURSE PAGE ── */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+      overflow-y: auto;
+    }
+    .overlay.open { display: block; }
+
+    .modal {
+      background: var(--black);
+      max-width: 860px;
+      margin: 3rem auto 6rem;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .modal-close {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; justify-content: flex-end;
+      background: rgba(12,12,12,0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+    }
+    .close-btn {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gray); cursor: pointer; background: none; border: none;
+      transition: color 0.15s;
+    }
+    .close-btn:hover { color: var(--white); }
+
+    .modal-hero {
+      background: var(--green);
+      padding: 2.5rem 2.5rem 2rem;
+      position: relative; overflow: hidden;
+    }
+    .modal-hero::before {
+      content: attr(data-rank);
+      position: absolute; right: -0.5rem; top: -1rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 9rem; font-weight: 900;
+      color: rgba(255,255,255,0.06); line-height: 1;
+      pointer-events: none;
+    }
+    .modal-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
+      color: rgba(201,168,76,0.8); margin-bottom: 0.5rem;
+    }
+    .modal-name {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      font-weight: 900; line-height: 1.05;
+    }
+
+    .modal-meta-bar {
+      background: var(--gold);
+      display: flex; flex-wrap: wrap; gap: 0;
+    }
+    .meta-item {
+      padding: 0.85rem 1.5rem;
+      border-right: 1px solid rgba(0,0,0,0.15);
+      flex: 1; min-width: 100px;
+    }
+    .meta-item:last-child { border-right: none; }
+    .meta-lbl {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(12,12,12,0.55);
+    }
+    .meta-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; font-weight: 700; color: var(--black);
+      margin-top: 0.1rem;
+    }
+
+    .modal-body {
+      padding: 2rem 2.5rem;
+    }
+
+    /* photos */
+    .photos-area {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 3px; margin-bottom: 2rem;
+    }
+    .photos-area img {
+      width: 100%; aspect-ratio: 4/3;
+      object-fit: cover; display: block;
+    }
+    .photo-upload-zone {
+      border: 1px dashed var(--border);
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      color: var(--gray);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+    }
+
+    /* review */
+    .review-section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 1.25rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .review-text {
+      font-size: 0.97rem; line-height: 1.8;
+      color: rgba(240,235,224,0.85);
+      margin-bottom: 2.5rem;
+      font-style: italic;
+    }
+    .no-review {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.8rem; color: var(--gray);
+      margin-bottom: 2.5rem; padding: 1.5rem;
+      border: 1px dashed var(--border);
+      text-align: center; letter-spacing: 0.1em;
+    }
+
+    /* ratings breakdown */
+    .ratings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.1rem;
+      margin-bottom: 2rem;
+      background: var(--border);
+    }
+    .rating-cell {
+      background: var(--surface);
+      padding: 1rem 1.25rem;
+    }
+    .rating-cell-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--gray); margin-bottom: 0.4rem;
+    }
+    .rating-cell-row {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .rating-bar-bg {
+      flex: 1; height: 3px;
+      background: rgba(255,255,255,0.07);
+    }
+    .rating-bar-fg {
+      height: 100%; background: var(--gold);
+      transition: width 0.8s ease;
+    }
+    .rating-cell-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--gold); min-width: 32px; text-align: right;
+    }
+
+    /* score trio */
+    .score-trio {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.1rem; background: var(--border); margin-bottom: 2rem;
+    }
+    .score-trio-item {
+      background: var(--surface2);
+      padding: 1.25rem; text-align: center;
+    }
+    .score-trio-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gray); margin-bottom: 0.4rem;
+    }
+    .score-trio-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem; font-weight: 900; color: var(--gold);
+    }
+
+    /* pricing table */
+    .pricing-table {
+      width: 100%; border-collapse: collapse;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.8rem; margin-bottom: 2rem;
+    }
+    .pricing-table th {
+      font-size: 0.6rem; letter-spacing: 0.15em; color: var(--gold);
+      padding: 0.5rem 0.75rem; text-align: center;
+      border-bottom: 1px solid var(--border);
+      cursor: default;
+    }
+    .pricing-table td {
+      padding: 0.55rem 0.75rem; text-align: center;
+      color: var(--gray-light); border-bottom: 1px solid var(--border);
+    }
+    .pricing-table tr:last-child td { border-bottom: none; }
+    .pricing-table td:first-child { text-align: left; color: var(--gray); }
+
+    /* nav between courses */
+    .modal-nav {
+      display: flex; justify-content: space-between;
+      padding-top: 1.5rem; border-top: 1px solid var(--border);
+    }
+    .modal-nav-btn {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold); cursor: pointer; background: none; border: none;
+      transition: opacity 0.15s;
+    }
+    .modal-nav-btn:hover { opacity: 0.7; }
+    .modal-nav-btn:disabled { color: var(--gray); cursor: default; }
+
+    /* scrollbar */
+    .overlay::-webkit-scrollbar { width: 6px; }
+    .overlay::-webkit-scrollbar-track { background: transparent; }
+    .overlay::-webkit-scrollbar-thumb { background: var(--border); }
+
+    @media (max-width: 700px) {
+      .hero { padding: 2rem 1rem 1.5rem; }
+      .table-wrap { padding: 0 0.5rem 4rem; }
+      .controls { padding: 0 1rem 1rem; }
+      .hdr { padding: 0 1rem; }
+      .modal { margin: 0; border: none; }
+      .modal-body { padding: 1.5rem 1.25rem; }
+      .modal-hero { padding: 2rem 1.25rem 1.5rem; }
+      .ratings-grid { grid-template-columns: 1fr; }
+      td:nth-child(5), td:nth-child(6), td:nth-child(7), th:nth-child(5), th:nth-child(6), th:nth-child(7) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-logo">The Card</div>
+  <div class="hdr-meta">DFW Golf Rankings &mdash; <span id="hdrCount">80</span> Courses</div>
+</header>
+
+<div class="hero">
+  <div class="hero-left">
+    <h1>The <em>Card</em></h1>
+    <p>Personal Rankings &amp; Course Reviews &mdash; Dallas / Fort Worth</p>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-block">
+      <div class="stat-num">80</div>
+      <div class="stat-label">Courses Ranked</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num" id="totalRounds">—</div>
+      <div class="stat-label">Total Rounds</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num" id="avgExp">—</div>
+      <div class="stat-label">Avg Experience</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <input class="search-box" id="search" type="text" placeholder="Search courses…">
+  <select class="sort-select" id="sortSel">
+    <option value="rank">Sort: Ranking</option>
+    <option value="experience">Sort: Experience Score</option>
+    <option value="courseScore">Sort: Course Score</option>
+    <option value="value">Sort: Best Value</option>
+    <option value="timesPlayed">Sort: Most Played</option>
+    <option value="name">Sort: A–Z</option>
+  </select>
+  <div class="count-label" id="countLabel">Showing 80 courses</div>
+</div>
+
+<div class="table-wrap">
+  <table id="mainTable">
+    <thead>
+      <tr>
+        <th data-col="rank">#</th>
+        <th data-col="name">Course</th>
+        <th data-col="experience" class="num">Experience</th>
+        <th data-col="courseScore" class="num">Course</th>
+        <th data-col="greens" class="num">Greens</th>
+        <th data-col="layout" class="num">Layout</th>
+        <th data-col="value" class="num">Value</th>
+        <th data-col="timesPlayed" class="num">Rounds</th>
+        <th data-col="weekdayMorning" class="num">Rate</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- MODAL OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <div class="modal-close">
+      <button class="close-btn" id="closeBtn">✕ Close</button>
+    </div>
+    <div class="modal-hero" id="modalHero">
+      <div class="modal-eyebrow" id="modalEyebrow"></div>
+      <div class="modal-name" id="modalName"></div>
+    </div>
+    <div class="modal-meta-bar" id="modalMetaBar"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const DATA = [{"name":"Fields Ranch at PGA Frisco - East Course","rank":1,"timesPlayed":0,"maintenance":5.0,"fairways":4.75,"rough":4.75,"bunkers":4.75,"greens":4.75,"layout":4.75,"difficulty":5.0,"aura":4.75,"range":5.0,"clubhouse":5.0,"playability":4.92,"courseScore":4.82,"experience":4.95,"value":1.0,"par":72.0,"distance":7860.0,"index":78.9,"slope":152.0,"twilightValue":1.0,"weekdayMorning":"$299.00","weekdayAfternoon":"$299.00","weekdayTwilight":"$299.00","weekendMorning":"$299.00","weekendAfternoon":"$299.00","weekendTwilight":"$299.00"},{"name":"Pine Dunes","rank":2,"timesPlayed":6.0,"maintenance":4.75,"fairways":4.5,"rough":4.5,"bunkers":4.75,"greens":4.75,"layout":4.75,"difficulty":4.0,"aura":5.0,"range":4.25,"clubhouse":4.5,"playability":4.49,"courseScore":4.69,"experience":4.78,"value":3.5,"par":72.0,"distance":7117.0,"index":74.4,"slope":131.0,"twilightValue":2.0,"weekdayMorning":"$89.00","weekdayAfternoon":"$89.00","weekdayTwilight":"$69.00","weekendMorning":"$139.00","weekendAfternoon":"$13.00","weekendTwilight":"$89.00"},{"name":"Old American Golf Club","rank":3,"timesPlayed":2.0,"maintenance":4.75,"fairways":4.75,"rough":4.75,"bunkers":4.5,"greens":4.75,"layout":4.75,"difficulty":4.75,"aura":4.5,"range":5.0,"clubhouse":5.0,"playability":4.7,"courseScore":4.68,"experience":4.81,"value":1.25,"par":71.0,"distance":7084.0,"index":75.2,"slope":145.0,"twilightValue":1.75,"weekdayMorning":"$175.00","weekdayAfternoon":"$175.00","weekdayTwilight":"$100.00","weekendMorning":"$175.00","weekendAfternoon":"$175.00","weekendTwilight":"$100.00"},{"name":"The Tribute Golf Links","rank":4,"timesPlayed":10.0,"maintenance":4.75,"fairways":4.75,"rough":4.75,"bunkers":4.5,"greens":4.75,"layout":4.75,"difficulty":3.5,"aura":4.75,"range":5.0,"clubhouse":5.0,"playability":4.2,"courseScore":4.64,"experience":4.77,"value":1.25,"par":72.0,"distance":7002.0,"index":73.9,"slope":130.0,"twilightValue":3.0,"weekdayMorning":"$150.00","weekdayAfternoon":"$150.00","weekdayTwilight":"$70.00","weekendMorning":"$150.00","weekendAfternoon":"$150.00","weekendTwilight":"$70.00"},{"name":"Fields Ranch at PGA Frisco - West Course","rank":5,"timesPlayed":0,"maintenance":5.0,"fairways":4.5,"rough":4.75,"bunkers":4.75,"greens":4.75,"layout":4.0,"difficulty":4.75,"aura":4.5,"range":5.0,"clubhouse":5.0,"playability":4.58,"courseScore":4.62,"experience":4.75,"value":1.25,"par":72.0,"distance":7319.0,"index":76.3,"slope":140.0,"twilightValue":1.0,"weekdayMorning":"$244.00","weekdayAfternoon":"$244.00","weekdayTwilight":"$244.00","weekendMorning":"$244.00","weekendAfternoon":"$244.00","weekendTwilight":"$244.00"},{"name":"Waterchase","rank":6,"timesPlayed":5.0,"maintenance":4.5,"fairways":4.5,"rough":4.5,"bunkers":4.25,"greens":4.0,"layout":4.5,"difficulty":4.5,"aura":4.0,"range":3.5,"clubhouse":1.5,"playability":4.62,"courseScore":4.37,"experience":4.34,"value":3.75,"par":72.0,"distance":7159.0,"index":74.7,"slope":135.0,"twilightValue":4.75,"weekdayMorning":"$65.00","weekdayAfternoon":"$65.00","weekdayTwilight":"$45.00","weekendMorning":"$83.00","weekendAfternoon":"$83.00","weekendTwilight":"$45.00"},{"name":"Cowboys Golf Club","rank":7,"timesPlayed":0,"maintenance":4.25,"fairways":4.5,"rough":4.25,"bunkers":4.5,"greens":4.5,"layout":4.25,"difficulty":4.0,"aura":4.5,"range":4.5,"clubhouse":4.75,"playability":4.21,"courseScore":4.37,"experience":4.48,"value":1.0,"par":72.0,"distance":7017.0,"index":74.2,"slope":140.0,"twilightValue":1.5,"weekdayMorning":"$259.99","weekdayAfternoon":"$259.99","weekdayTwilight":"$99.99","weekendMorning":"$259.99","weekendAfternoon":"$259.99","weekendTwilight":"$99.99"},{"name":"Texas Star Golf Course","rank":8,"timesPlayed":6.0,"maintenance":4.5,"fairways":4.5,"rough":4.5,"bunkers":4.5,"greens":4.5,"layout":4.5,"difficulty":4.0,"aura":4.0,"range":4.25,"clubhouse":4.5,"playability":4.21,"courseScore":4.37,"experience":4.46,"value":3.75,"par":71.0,"distance":6936.0,"index":74.1,"slope":136.0,"twilightValue":4.0,"weekdayMorning":"$65.00","weekdayAfternoon":"$65.00","weekdayTwilight":"$45.00","weekendMorning":"$85.00","weekendAfternoon":"$85.00","weekendTwilight":"$55.00"},{"name":"Coyote Ridge","rank":9,"timesPlayed":2.0,"maintenance":4.5,"fairways":4.5,"rough":4.25,"bunkers":4.5,"greens":4.25,"layout":4.5,"difficulty":4.5,"aura":4.0,"range":4.5,"clubhouse":4.5,"playability":4.45,"courseScore":4.37,"experience":4.47,"value":3.25,"par":72.0,"distance":7003.0,"index":75.2,"slope":141.0,"twilightValue":2.0,"weekdayMorning":"$69.00","weekdayAfternoon":"$69.00","weekdayTwilight":"$69.00","weekendMorning":"$89.00","weekendAfternoon":"$89.00","weekendTwilight":"$89.00"},{"name":"Wild Horse Golf Club","rank":10,"timesPlayed":1.0,"maintenance":4.5,"fairways":4.5,"rough":4.25,"bunkers":4.25,"greens":4.5,"layout":4.0,"difficulty":3.0,"aura":4.5,"range":4.75,"clubhouse":5.0,"playability":3.66,"courseScore":4.28,"experience":4.4,"value":2.25,"par":72.0,"distance":6891.0,"index":73.7,"slope":134.0,"twilightValue":2.25,"weekdayMorning":"$112.00","weekdayAfternoon":"$84.00","weekdayTwilight":"$66.00","weekendMorning":"$112.00","weekendAfternoon":"$77.00","weekendTwilight":"$77.00"},{"name":"The Golf Club at Fossil Creek","rank":11,"timesPlayed":2.0,"maintenance":4.25,"fairways":4.25,"rough":4.0,"bunkers":4.0,"greens":4.25,"layout":4.75,"difficulty":3.75,"aura":4.5,"range":4.0,"clubhouse":4.0,"playability":4.13,"courseScore":4.27,"experience":4.34,"value":3.0,"par":72.0,"distance":6865.0,"index":73.8,"slope":137.0,"twilightValue":3.75,"weekdayMorning":"$69.95","weekdayAfternoon":"$69.95","weekdayTwilight":"$49.95","weekendMorning":"$94.95","weekendAfternoon":"$94.95","weekendTwilight":"$55.95"},{"name":"Texas Rangers Golf Club","rank":12,"timesPlayed":3.0,"maintenance":4.5,"fairways":4.5,"rough":4.5,"bunkers":4.25,"greens":4.5,"layout":4.0,"difficulty":3.0,"aura":4.0,"range":4.5,"clubhouse":4.75,"playability":3.79,"courseScore":4.24,"experience":4.34,"value":1.75,"par":72.0,"distance":7010.0,"index":73.7,"slope":132.0,"twilightValue":1.5,"weekdayMorning":"$95.00","weekdayAfternoon":"$95.00","weekdayTwilight":"$71.50","weekendMorning":"$130.00","weekendAfternoon":"$130.00","weekendTwilight":"$93.50"},{"name":"Heritage Ranch Golf & Country Club","rank":13,"timesPlayed":1.0,"maintenance":4.25,"fairways":4.25,"rough":4.25,"bunkers":4.5,"greens":4.25,"layout":4.25,"difficulty":4.0,"aura":4.0,"range":4.25,"clubhouse":4.25,"playability":4.18,"courseScore":4.22,"experience":4.3,"value":1.75,"par":72.0,"distance":6988.0,"index":74.0,"slope":140.0,"twilightValue":1.75,"weekdayMorning":"$108.00","weekdayAfternoon":"$86.00","weekdayTwilight":"$65.00","weekendMorning":"$132.00","weekendAfternoon":"$117.00","weekendTwilight":"$91.00"},{"name":"Tangle Ridge Golf Club","rank":14,"timesPlayed":7.0,"maintenance":4.25,"fairways":4.25,"rough":4.0,"bunkers":4.0,"greens":4.0,"layout":4.5,"difficulty":3.0,"aura":4.5,"range":4.0,"clubhouse":4.0,"playability":3.76,"courseScore":4.17,"experience":4.24,"value":4.25,"par":72.0,"distance":6835.0,"index":73.4,"slope":133.0,"twilightValue":4.75,"weekdayMorning":"$55.00","weekdayAfternoon":"$55.00","weekdayTwilight":"$35.00","weekendMorning":"$75.00","weekendAfternoon":"$75.00","weekendTwilight":"$45.00"},{"name":"Woodbridge Golf Club","rank":15,"timesPlayed":1.0,"maintenance":4.25,"fairways":4.25,"rough":4.25,"bunkers":3.75,"greens":4.0,"layout":4.25,"difficulty":4.25,"aura":3.75,"range":4.5,"clubhouse":4.25,"playability":4.38,"courseScore":4.13,"experience":4.22,"value":4.25,"par":72.0,"distance":7088.0,"index":75.1,"slope":135.0,"twilightValue":4.75,"weekdayMorning":"$54.00","weekdayAfternoon":"$48.00","weekdayTwilight":"$43.00","weekendMorning":"$79.00","weekendAfternoon":"$67.00","weekendTwilight":"$45.00"},{"name":"Buffalo Creek Golf Club","rank":16,"timesPlayed":4.0,"maintenance":4.25,"fairways":4.25,"rough":4.25,"bunkers":4.5,"greens":4.25,"layout":4.25,"difficulty":4.0,"aura":3.25,"range":4.0,"clubhouse":3.0,"playability":4.28,"courseScore":4.11,"experience":4.14,"value":3.75,"par":71.0,"distance":7078.0,"index":74.9,"slope":132.0,"twilightValue":4.5,"weekdayMorning":"$59.00","weekdayAfternoon":"$49.00","weekdayTwilight":"$39.00","weekendMorning":"$99.00","weekendAfternoon":"$69.00","weekendTwilight":"$49.00"},{"name":"The Bridges Golf Club (Gunter)","rank":17,"timesPlayed":1.0,"maintenance":4.25,"fairways":4.25,"rough":4.25,"bunkers":3.75,"greens":4.25,"layout":3.75,"difficulty":5.0,"aura":3.5,"range":3.75,"clubhouse":3.75,"playability":4.58,"courseScore":4.1,"experience":4.15,"value":3.0,"par":72.0,"distance":7612.0,"index":77.7,"slope":139.0,"twilightValue":2.5,"weekdayMorning":"$69.00","weekdayAfternoon":"$69.00","weekdayTwilight":"$59.00","weekendMorning":"$89.00","weekendAfternoon":"$89.00","weekendTwilight":"$72.00"},{"name":"Tierra Verde","rank":18,"timesPlayed":2.0,"maintenance":4.0,"fairways":4.0,"rough":4.0,"bunkers":4.0,"greens":4.0,"layout":4.0,"difficulty":3.0,"aura":4.0,"range":4.0,"clubhouse":4.0,"playability":3.75,"courseScore":3.96,"experience":4.03,"value":2.75,"par":72.0,"distance":6975.0,"index":73.9,"slope":129.0,"twilightValue":2.5,"weekdayMorning":"$65.00","weekdayAfternoon":"$65.00","weekdayTwilight":"$47.50","weekendMorning":"$90.00","weekendAfternoon":"$90.00","weekendTwilight":"$69.50"},{"name":"Waterview Golf Club","rank":19,"timesPlayed":5.0,"maintenance":3.75,"fairways":4.0,"rough":4.0,"bunkers":4.25,"greens":4.0,"layout":4.25,"difficulty":3.5,"aura":3.5,"range":4.0,"clubhouse":3.75,"playability":4.24,"courseScore":3.96,"experience":4.02,"value":4.5,"par":72.0,"distance":7191.0,"index":74.1,"slope":128.0,"twilightValue":4.0,"weekdayMorning":"$55.00","weekdayAfternoon":"$50.00","weekdayTwilight":"$47.00","weekendMorning":"$69.00","weekendAfternoon":"$59.00","weekendTwilight":"$49.00"},{"name":"Pecan Hollow Golf Course","rank":20,"timesPlayed":2.0,"maintenance":4.0,"fairways":4.25,"rough":4.25,"bunkers":3.5,"greens":4.25,"layout":3.75,"difficulty":4.5,"aura":3.0,"range":4.25,"clubhouse":3.75,"playability":4.36,"courseScore":3.91,"experience":3.98,"value":5.0,"par":71.0,"distance":7152.0,"index":75.4,"slope":141.0,"twilightValue":4.75,"weekdayMorning":"$46.55","weekdayAfternoon":"$41.14","weekdayTwilight":"$32.48","weekendMorning":"$66.03","weekendAfternoon":"$51.96","weekendTwilight":"$38.97"},{"name":"Bridlewood Golf Club","rank":21,"timesPlayed":0,"maintenance":4.0,"fairways":4.0,"rough":3.75,"bunkers":3.75,"greens":4.0,"layout":4.0,"difficulty":3.0,"aura":3.75,"range":3.75,"clubhouse":4.0,"playability":3.9,"courseScore":3.9,"experience":3.96,"value":1.5,"par":72.0,"distance":7111.0,"index":73.6,"slope":130.0,"twilightValue":1.5,"weekdayMorning":"$89.00","weekdayAfternoon":"$79.00","weekdayTwilight":"$69.00","weekendMorning":"$135.00","weekendAfternoon":"$125.00","weekendTwilight":"$99.00"},{"name":"Cedar Crest Golf Course","rank":22,"timesPlayed":31.0,"maintenance":3.75,"fairways":3.75,"rough":3.75,"bunkers":3.75,"greens":4.0,"layout":4.5,"difficulty":3.5,"aura":4.0,"range":3.75,"clubhouse":4.25,"playability":3.81,"courseScore":3.88,"experience":3.95,"value":5.0,"par":70.0,"distance":6726.0,"index":73.8,"slope":134.0,"twilightValue":5.0,"weekdayMorning":"$31.00","weekdayAfternoon":"$23.00","weekdayTwilight":"$23.00","weekendMorning":"$34.00","weekendAfternoon":"$26.00","weekendTwilight":"$26.00"},{"name":"Sky Creek Ranch Golf Club","rank":23,"timesPlayed":1.0,"maintenance":3.75,"fairways":4.0,"rough":3.0,"bunkers":3.75,"greens":4.0,"layout":4.25,"difficulty":3.5,"aura":4.0,"range":4.0,"clubhouse":4.75,"playability":3.98,"courseScore":3.87,"experience":3.96,"value":2.0,"par":72.0,"distance":6953.0,"index":73.4,"slope":136.0,"twilightValue":1.75,"weekdayMorning":"$65.00","weekdayAfternoon":"$65.00","weekdayTwilight":"$59.00","weekendMorning":"$135.00","weekendAfternoon":"$109.00","weekendTwilight":"$79.00"},{"name":"Grapevine Golf Course","rank":24,"timesPlayed":0,"maintenance":3.75,"fairways":3.75,"rough":3.5,"bunkers":3.5,"greens":3.75,"layout":4.25,"difficulty":3.5,"aura":4.25,"range":3.75,"clubhouse":3.75,"playability":3.95,"courseScore":3.87,"experience":3.92,"value":3.5,"par":72.0,"distance":6934.0,"index":74.1,"slope":134.0,"twilightValue":3.25,"weekdayMorning":"$60.00","weekdayAfternoon":"$60.00","weekdayTwilight":"$46.00","weekendMorning":"$75.00","weekendAfternoon":"$75.00","weekendTwilight":"$55.00"},{"name":"Tenison Park Golf Course - Highlands Course","rank":25,"timesPlayed":25.0,"maintenance":3.75,"fairways":3.75,"rough":3.5,"bunkers":3.75,"greens":4.0,"layout":4.25,"difficulty":3.0,"aura":4.0,"range":3.0,"clubhouse":3.25,"playability":3.95,"courseScore":3.87,"experience":3.87,"value":4.75,"par":72.0,"distance":7078.0,"index":73.9,"slope":129.0,"twilightValue":4.0,"weekdayMorning":"$57.27","weekdayAfternoon":"$47.11","weekdayTwilight":"$40.65","weekendMorning":"$64.27","weekendAfternoon":"$54.11","weekendTwilight":"$47.65"},{"name":"Mansfield National Golf Club","rank":26,"timesPlayed":3.0,"maintenance":4.0,"fairways":4.25,"rough":4.25,"bunkers":3.5,"greens":3.5,"layout":4.0,"difficulty":2.0,"aura":3.5,"range":4.0,"clubhouse":3.25,"playability":3.28,"courseScore":3.78,"experience":3.82,"value":3.25,"par":72.0,"distance":6850.0,"index":72.7,"slope":128.0,"twilightValue":3.5,"weekdayMorning":"$54.95","weekdayAfternoon":"$54.95","weekdayTwilight":"$39.95","weekendMorning":"$79.95","weekendAfternoon":"$79.95","weekendTwilight":"$52.95"},{"name":"The Trails of Frisco Golf Club","rank":27,"timesPlayed":2.0,"maintenance":4.0,"fairways":4.0,"rough":3.75,"bunkers":3.5,"greens":4.25,"layout":3.75,"difficulty":4.0,"aura":3.0,"range":2.0,"clubhouse":3.25,"playability":3.98,"courseScore":3.77,"experience":3.74,"value":3.25,"par":71.0,"distance":6959.0,"index":74.0,"slope":138.0,"twilightValue":4.25,"weekdayMorning":"$59.00","weekdayAfternoon":"$59.00","weekdayTwilight":"$45.00","weekendMorning":"$89.00","weekendAfternoon":"$69.00","weekendTwilight":"$45.00"},{"name":"Ridgeview Ranch Golf Club","rank":28,"timesPlayed":2.0,"maintenance":3.5,"fairways":4.5,"rough":3.75,"bunkers":3.75,"greens":3.5,"layout":4.25,"difficulty":3.25,"aura":3.0,"range":4.0,"clubhouse":3.75,"playability":3.97,"courseScore":3.77,"experience":3.82,"value":4.0,"par":72.0,"distance":7025.0,"index":74.1,"slope":130.0,"twilightValue":4.25,"weekdayMorning":"$50.95","weekdayAfternoon":"$50.95","weekdayTwilight":"$37.95","weekendMorning":"$71.95","weekendAfternoon":"$71.95","weekendTwilight":"$44.95"},{"name":"Firewheel Golf Park - Bridges Course","rank":29,"timesPlayed":1.0,"maintenance":4.0,"fairways":3.75,"rough":4.0,"bunkers":3.5,"greens":3.75,"layout":4.0,"difficulty":3.25,"aura":3.5,"range":3.75,"clubhouse":3.5,"playability":3.66,"courseScore":3.76,"experience":3.8,"value":4.0,"par":72.0,"distance":6819.0,"index":72.7,"slope":131.0,"twilightValue":4.25,"weekdayMorning":"$55.00","weekdayAfternoon":"$55.00","weekdayTwilight":"$42.00","weekendMorning":"$69.00","weekendAfternoon":"$69.00","weekendTwilight":"$45.00"},{"name":"Sherrill Park Golf Course - Course 1","rank":30,"timesPlayed":1.0,"maintenance":4.0,"fairways":3.75,"rough":4.0,"bunkers":3.5,"greens":3.25,"layout":3.5,"difficulty":4.0,"aura":3.5,"range":4.75,"clubhouse":3.75,"playability":3.96,"courseScore":3.72,"experience":3.81,"value":4.5,"par":72.0,"distance":7016.0,"index":74.4,"slope":132.0,"twilightValue":4.5,"weekdayMorning":"$54.00","weekdayAfternoon":"$43.00","weekdayTwilight":"$40.00","weekendMorning":"$68.00","weekendAfternoon":"$53.00","weekendTwilight":"$43.00"},{"name":"Tour 18 Dallas","rank":31,"timesPlayed":1.0,"maintenance":3.0,"fairways":3.5,"rough":3.75,"bunkers":3.25,"greens":3.25,"layout":4.25,"difficulty":4.0,"aura":4.25,"range":4.0,"clubhouse":4.25,"playability":4.23,"courseScore":3.71,"experience":3.78,"value":1.5,"par":72.0,"distance":7033.0,"index":75.2,"slope":140.0,"twilightValue":1.25,"weekdayMorning":"$99.00","weekdayAfternoon":"$74.00","weekdayTwilight":"$74.00","weekendMorning":"$135.00","weekendAfternoon":"$135.00","weekendTwilight":"$95.00"},{"name":"Indian Creek Golf Club - Creek Course","rank":32,"timesPlayed":2.0,"maintenance":3.75,"fairways":3.5,"rough":3.5,"bunkers":3.25,"greens":3.5,"layout":3.5,"difficulty":4.5,"aura":3.5,"range":3.5,"clubhouse":3.5,"playability":4.33,"courseScore":3.66,"experience":3.69,"value":2.5,"par":72.0,"distance":7235.0,"index":75.5,"slope":141.0,"twilightValue":2.5,"weekdayMorning":"$67.00","weekdayAfternoon":"$67.00","weekdayTwilight":"$52.00","weekendMorning":"$80.00","weekendAfternoon":"$80.00","weekendTwilight":"$63.00"},{"name":"Frisco Lakes Golf Club","rank":33,"timesPlayed":0,"maintenance":3.75,"fairways":3.75,"rough":3.25,"bunkers":3.5,"greens":3.5,"layout":3.5,"difficulty":3.5,"aura":3.5,"range":3.75,"clubhouse":3.75,"playability":3.92,"courseScore":3.63,"experience":3.68,"value":1.5,"par":72.0,"distance":7129.0,"index":74.3,"slope":131.0,"twilightValue":2.25,"weekdayMorning":"$94.00","weekdayAfternoon":"$74.00","weekdayTwilight":"$66.00","weekendMorning":"$132.00","weekendAfternoon":"$105.00","weekendTwilight":"$66.00"},{"name":"Thorntree Golf Club","rank":34,"timesPlayed":4.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":4.5,"difficulty":4.5,"aura":2.5,"range":3.5,"clubhouse":3.5,"playability":4.49,"courseScore":3.58,"experience":3.62,"value":4.5,"par":72.0,"distance":7042.0,"index":74.9,"slope":146.0,"twilightValue":3.5,"weekdayMorning":"$50.00","weekdayAfternoon":"$38.00","weekdayTwilight":"$38.00","weekendMorning":"$70.00","weekendAfternoon":"$50.00","weekendTwilight":"$50.00"},{"name":"WestRidge Golf Course","rank":35,"timesPlayed":0,"maintenance":3.25,"fairways":3.25,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":4.25,"difficulty":3.0,"aura":3.5,"range":3.5,"clubhouse":3.5,"playability":3.91,"courseScore":3.55,"experience":3.58,"value":1.75,"par":72.0,"distance":7043.0,"index":74.0,"slope":131.0,"twilightValue":2.0,"weekdayMorning":"$89.00","weekdayAfternoon":"$65.00","weekdayTwilight":"$65.00","weekendMorning":"$125.00","weekendAfternoon":"$69.00","weekendTwilight":"$69.00"},{"name":"The Courses at Watters Creek - Traditions Course","rank":36,"timesPlayed":0,"maintenance":3.5,"fairways":3.25,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":3.5,"difficulty":4.0,"aura":3.5,"range":3.5,"clubhouse":3.5,"playability":3.96,"courseScore":3.54,"experience":3.57,"value":3.25,"par":72.0,"distance":7015.0,"index":74.4,"slope":136.0,"twilightValue":1.75,"weekdayMorning":"$55.00","weekdayAfternoon":"$55.00","weekdayTwilight":"$55.00","weekendMorning":"$75.00","weekendAfternoon":"$75.00","weekendTwilight":"$75.00"},{"name":"Bear Creek Golf Club - West Course","rank":37,"timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.75,"bunkers":3.0,"greens":3.0,"layout":4.0,"difficulty":4.0,"aura":3.5,"range":3.0,"clubhouse":3.5,"playability":3.75,"courseScore":3.52,"experience":3.54,"value":2.25,"par":72.0,"distance":6677.0,"index":73.7,"slope":140.0,"twilightValue":3.25,"weekdayMorning":"$64.95","weekdayAfternoon":"$64.95","weekdayTwilight":"$44.95","weekendMorning":"$86.95","weekendAfternoon":"$86.95","weekendTwilight":"$52.95"},{"name":"Champions Circle Golf Club","rank":38,"timesPlayed":0,"maintenance":3.5,"fairways":3.5,"rough":3.25,"bunkers":3.25,"greens":3.5,"layout":3.25,"difficulty":4.0,"aura":3.25,"range":3.25,"clubhouse":3.25,"playability":3.87,"courseScore":3.46,"experience":3.47,"value":2.75,"par":72.0,"distance":7005.0,"index":73.7,"slope":143.0,"twilightValue":2.25,"weekdayMorning":"$59.00","weekdayAfternoon":"$59.00","weekdayTwilight":"$48.00","weekendMorning":"$79.00","weekendAfternoon":"$79.00","weekendTwilight":"$63.00"},{"name":"The Resort Golf Club","rank":39,"timesPlayed":0,"maintenance":3.5,"fairways":3.25,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":3.5,"difficulty":3.5,"aura":3.5,"range":3.5,"clubhouse":3.5,"playability":3.37,"courseScore":3.44,"experience":3.47,"value":3.0,"par":72.0,"distance":6636.0,"index":73.4,"slope":140.0,"twilightValue":2.25,"weekdayMorning":"$55.00","weekdayAfternoon":"$50.00","weekdayTwilight":"$45.00","weekendMorning":"$83.00","weekendAfternoon":"$75.00","weekendTwilight":"$65.00"},{"name":"Indian Creek Golf Club - Lakes Course","rank":40,"timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.25,"bunkers":3.25,"greens":3.5,"layout":3.25,"difficulty":3.5,"aura":3.25,"range":3.5,"clubhouse":3.5,"playability":3.69,"courseScore":3.43,"experience":3.46,"value":3.75,"par":72.0,"distance":7000.0,"index":74.0,"slope":132.0,"twilightValue":3.25,"weekdayMorning":"$51.00","weekdayAfternoon":"$51.00","weekdayTwilight":"$46.00","weekendMorning":"$65.00","weekendAfternoon":"$65.00","weekendTwilight":"$50.00"},{"name":"The Golf Club at Twin Creeks","rank":41,"timesPlayed":1.0,"maintenance":3.25,"fairways":3.25,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":3.75,"difficulty":2.75,"aura":3.5,"range":4.5,"clubhouse":4.25,"playability":3.43,"courseScore":3.43,"experience":3.52,"value":2.0,"par":72.0,"distance":6840.0,"index":73.2,"slope":131.0,"twilightValue":2.75,"weekdayMorning":"$59.95","weekdayAfternoon":"$59.95","weekdayTwilight":"$44.95","weekendMorning":"$99.95","weekendAfternoon":"$99.95","weekendTwilight":"$56.95"},{"name":"Irving Golf Club","rank":42,"timesPlayed":12.0,"maintenance":3.75,"fairways":3.75,"rough":3.5,"bunkers":3.75,"greens":4.0,"layout":3.5,"difficulty":2.0,"aura":2.75,"range":4.5,"clubhouse":3.75,"playability":2.87,"courseScore":3.42,"experience":3.49,"value":4.25,"par":71.0,"distance":6632.0,"index":71.8,"slope":127.0,"twilightValue":3.0,"weekdayMorning":"$50.00","weekdayAfternoon":"$50.00","weekdayTwilight":"$45.00","weekendMorning":"$60.00","weekendAfternoon":"$55.00","weekendTwilight":"$52.00"},{"name":"Sherrill Park Golf Course - Course 2","rank":43,"timesPlayed":0,"maintenance":3.75,"fairways":3.75,"rough":3.5,"bunkers":3.5,"greens":3.75,"layout":3.5,"difficulty":1.75,"aura":3.25,"range":3.25,"clubhouse":3.25,"playability":2.5,"courseScore":3.4,"experience":3.41,"value":4.75,"par":70.0,"distance":6375.0,"index":69.4,"slope":125.0,"twilightValue":4.25,"weekdayMorning":"$47.00","weekdayAfternoon":"$39.00","weekdayTwilight":"$36.00","weekendMorning":"$55.00","weekendAfternoon":"$43.00","weekendTwilight":"$41.00"},{"name":"Stevens Park Golf Course","rank":44,"timesPlayed":10.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.5,"greens":3.5,"layout":3.5,"difficulty":2.0,"aura":3.5,"range":0.0,"clubhouse":3.5,"playability":2.48,"courseScore":3.33,"experience":3.25,"value":3.5,"par":70.0,"distance":6285.0,"index":71.6,"slope":130.0,"twilightValue":3.25,"weekdayMorning":"$56.00","weekdayAfternoon":"$49.00","weekdayTwilight":"$43.00","weekendMorning":"$69.00","weekendAfternoon":"$56.00","weekendTwilight":"$49.00"},{"name":"Firewheel Golf Park - Old Course","rank":45,"timesPlayed":0,"maintenance":3.25,"fairways":3.25,"rough":3.25,"bunkers":3.25,"greens":3.25,"layout":3.25,"difficulty":3.75,"aura":3.25,"range":3.25,"clubhouse":3.25,"playability":3.61,"courseScore":3.31,"experience":3.33,"value":4.25,"par":71.0,"distance":6845.0,"index":74.1,"slope":135.0,"twilightValue":3.75,"weekdayMorning":"$44.00","weekdayAfternoon":"$44.00","weekdayTwilight":"$31.00","weekendMorning":"$58.00","weekendAfternoon":"$58.00","weekendTwilight":"$43.00"},{"name":"Pinnacle Golf Club","rank":46,"timesPlayed":75.0,"maintenance":3.5,"fairways":3.5,"rough":3.0,"bunkers":2.75,"greens":4.0,"layout":3.5,"difficulty":2.0,"aura":3.5,"range":3.0,"clubhouse":4.0,"playability":2.55,"courseScore":3.28,"experience":3.31,"value":3.0,"par":72.0,"distance":6349.0,"index":71.8,"slope":132.0,"twilightValue":3.0,"weekdayMorning":"$43.00","weekdayAfternoon":"$43.00","weekdayTwilight":"$32.00","weekendMorning":"$79.00","weekendAfternoon":"$79.00","weekendTwilight":"$50.00"},{"name":"Hidden Creek Golf Club","rank":47,"timesPlayed":0,"maintenance":3.25,"fairways":3.0,"rough":3.25,"bunkers":3.25,"greens":3.25,"layout":3.25,"difficulty":4.0,"aura":3.25,"range":3.25,"clubhouse":3.25,"playability":3.67,"courseScore":3.28,"experience":3.3,"value":4.5,"par":71.0,"distance":6829.0,"index":73.8,"slope":139.0,"twilightValue":5.0,"weekdayMorning":"$40.00","weekdayAfternoon":"$40.00","weekdayTwilight":"$29.00","weekendMorning":"$56.00","weekendAfternoon":"$56.00","weekendTwilight":"$31.00"},{"name":"Rusted Rail","rank":48,"timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.25,"greens":3.25,"layout":2.5,"difficulty":2.5,"aura":3.0,"range":3.25,"clubhouse":3.0,"playability":3.33,"courseScore":3.26,"experience":3.27,"value":2.75,"par":72.0,"distance":7218.0,"index":74.1,"slope":119.0,"twilightValue":4.25,"weekdayMorning":"$55.00","weekdayAfternoon":"$55.00","weekdayTwilight":"$40.00","weekendMorning":"$75.00","weekendAfternoon":"$75.00","weekendTwilight":"$40.00"},{"name":"Riverside Golf Club","rank":49,"timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.25,"greens":3.25,"layout":3.0,"difficulty":3.5,"aura":2.5,"range":3.25,"clubhouse":2.0,"playability":3.56,"courseScore":3.26,"experience":3.24,"value":3.0,"par":72.0,"distance":6957.0,"index":74.1,"slope":131.0,"twilightValue":3.0,"weekdayMorning":"$55.00","weekdayAfternoon":"$55.00","weekdayTwilight":"$43.00","weekendMorning":"$73.00","weekendAfternoon":"$68.00","weekendTwilight":"$52.00"},{"name":"Bear Creek Golf Club - East Course","rank":50,"timesPlayed":1.0,"maintenance":3.5,"fairways":3.5,"rough":3.5,"bunkers":3.0,"greens":1.75,"layout":3.5,"difficulty":3.5,"aura":3.0,"range":3.0,"clubhouse":3.5,"playability":3.41,"courseScore":3.21,"experience":3.23,"value":2.25,"par":72.0,"distance":6670.0,"index":73.6,"slope":139.0,"twilightValue":3.0,"weekdayMorning":"$59.95","weekdayAfternoon":"$59.95","weekdayTwilight":"$44.95","weekendMorning":"$82.95","weekendAfternoon":"$82.95","weekendTwilight":"$52.95"},{"name":"Firewheel Golf Park - Lakes Course","rank":51,"timesPlayed":2.0,"maintenance":3.25,"fairways":3.25,"rough":3.25,"bunkers":3.25,"greens":3.5,"layout":3.0,"difficulty":4.5,"aura":2.0,"range":3.75,"clubhouse":2.5,"playability":4.09,"courseScore":3.18,"experience":3.19,"value":4.0,"par":72.0,"distance":7134.0,"index":75.5,"slope":139.0,"twilightValue":3.75,"weekdayMorning":"$44.00","weekdayAfternoon":"$44.00","weekdayTwilight":"$31.00","weekendMorning":"$58.00","weekendAfternoon":"$58.00","weekendTwilight":"$43.00"},{"name":"Luna Vista Golf Course","rank":52,"timesPlayed":6.0,"maintenance":3.5,"fairways":3.5,"rough":3.75,"bunkers":3.75,"greens":3.75,"layout":3.0,"difficulty":2.0,"aura":2.0,"range":3.75,"clubhouse":3.5,"playability":2.94,"courseScore":3.18,"experience":3.22,"value":4.0,"par":72.0,"distance":6847.0,"index":72.8,"slope":128.0,"twilightValue":3.25,"weekdayMorning":"$54.00","weekdayAfternoon":"$43.00","weekdayTwilight":"$39.00","weekendMorning":"$57.00","weekendAfternoon":"$47.00","weekendTwilight":"$46.00"},{"name":"Southern Oaks Golf Club","rank":53,"timesPlayed":0,"maintenance":3.0,"fairways":2.75,"rough":3.0,"bunkers":3.0,"greens":3.0,"layout":3.0,"difficulty":4.75,"aura":3.0,"range":3.0,"clubhouse":3.0,"playability":4.25,"courseScore":3.17,"experience":3.17,"value":3.25,"par":72.0,"distance":7311.0,"index":76.0,"slope":135.0,"twilightValue":4.5,"weekdayMorning":"$49.88","weekdayAfternoon":"$49.88","weekdayTwilight":"$27.71","weekendMorning":"$66.51","weekendAfternoon":"$66.51","weekendTwilight":"$36.95"},{"name":"Meadowbrook","rank":54,"timesPlayed":3.0,"maintenance":3.25,"fairways":3.0,"rough":3.0,"bunkers":3.0,"greens":3.0,"layout":3.0,"difficulty":1.75,"aura":3.25,"range":3.0,"clubhouse":3.0,"playability":2.32,"courseScore":2.97,"experience":3.0,"value":4.75,"par":71.0,"distance":6363.0,"index":70.2,"slope":126.0,"twilightValue":3.75,"weekdayMorning":"$40.00","weekdayAfternoon":"$40.00","weekdayTwilight":"$40.00","weekendMorning":"$40.00","weekendAfternoon":"$40.00","weekendTwilight":"$40.00"},{"name":"Rockwood Park Golf Course","rank":55,"timesPlayed":0,"maintenance":3.0,"fairways":3.0,"rough":3.0,"bunkers":3.0,"greens":3.0,"layout":3.0,"difficulty":2.75,"aura":3.0,"range":3.0,"clubhouse":3.0,"playability":3.42,"courseScore":3.07,"experience":3.07,"value":2.5,"par":72.0,"distance":7053.0,"index":73.7,"slope":120.0,"twilightValue":4.75,"weekdayMorning":"$60.00","weekdayAfternoon":"$51.00","weekdayTwilight":"$33.00","weekendMorning":"$75.00","weekendAfternoon":"$65.00","weekendTwilight":"$29.50"},{"name":"Split Rail Golf Course","rank":56,"timesPlayed":0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.5,"layout":2.5,"difficulty":4.75,"aura":2.75,"range":2.5,"clubhouse":2.5,"playability":4.08,"courseScore":2.81,"experience":2.77,"value":2.5,"par":72.0,"distance":7353.0,"index":76.2,"slope":138.0,"twilightValue":2.25,"weekdayMorning":"$55.00","weekdayAfternoon":"$55.00","weekdayTwilight":"$40.00","weekendMorning":"$65.00","weekendAfternoon":"$65.00","weekendTwilight":"$50.00"},{"name":"Iron Horse Golf Club","rank":57,"timesPlayed":1.0,"maintenance":1.75,"fairways":2.75,"rough":3.0,"bunkers":4.0,"greens":3.0,"layout":3.0,"difficulty":4.0,"aura":3.0,"range":3.5,"clubhouse":3.5,"playability":3.81,"courseScore":2.97,"experience":3.0,"value":2.0,"par":71.0,"distance":7028.0,"index":73.6,"slope":144.0,"twilightValue":1.5,"weekdayMorning":"$60.86","weekdayAfternoon":"$53.86","weekdayTwilight":"$42.86","weekendMorning":"$83.86","weekendAfternoon":"$78.86","weekendTwilight":"$69.86"},{"name":"Lake Arlington Golf Course","rank":58,"timesPlayed":0,"maintenance":3.0,"fairways":3.0,"rough":3.0,"bunkers":3.0,"greens":3.0,"layout":3.0,"difficulty":2.0,"aura":3.0,"range":3.0,"clubhouse":3.0,"playability":2.69,"courseScore":2.95,"experience":2.95,"value":5.0,"par":71.0,"distance":6618.0,"index":72.3,"slope":122.0,"twilightValue":5.0,"weekdayMorning":"$26.00","weekdayAfternoon":"$26.00","weekdayTwilight":"$21.50","weekendMorning":"$32.50","weekendAfternoon":"$32.50","weekendTwilight":"$25.25"},{"name":"Mesquite Golf Club","rank":59,"timesPlayed":1.0,"maintenance":2.75,"fairways":2.75,"rough":2.75,"bunkers":3.5,"greens":5.0,"layout":2.75,"difficulty":3.0,"aura":2.0,"range":3.5,"clubhouse":3.0,"playability":3.09,"courseScore":2.93,"experience":2.95,"value":4.5,"par":71.0,"distance":6753.0,"index":74.2,"slope":128.0,"twilightValue":3.5,"weekdayMorning":"$43.42","weekdayAfternoon":"$37.87","weekdayTwilight":"$37.87","weekendMorning":"$53.57","weekendAfternoon":"$40.65","weekendTwilight":"$40.65"},{"name":"Hawks Creek","rank":60,"timesPlayed":0,"maintenance":2.75,"fairways":2.75,"rough":2.75,"bunkers":2.75,"greens":2.75,"layout":2.75,"difficulty":3.5,"aura":2.75,"range":2.75,"clubhouse":2.75,"playability":3.41,"courseScore":2.86,"experience":2.84,"value":2.25,"par":72.0,"distance":6898.0,"index":74.0,"slope":134.0,"twilightValue":2.5,"weekdayMorning":"$60.00","weekdayAfternoon":"$60.00","weekdayTwilight":"$45.00","weekendMorning":"$65.00","weekendAfternoon":"$65.00","weekendTwilight":"$50.00"},{"name":"Old Brickyard Golf Course","rank":61,"timesPlayed":3.0,"maintenance":3.0,"fairways":2.75,"rough":2.75,"bunkers":2.75,"greens":3.0,"layout":2.0,"difficulty":1.75,"aura":4.0,"range":3.0,"clubhouse":3.0,"playability":2.12,"courseScore":2.85,"experience":2.85,"value":4.75,"par":71.0,"distance":6486.0,"index":70.6,"slope":125.0,"twilightValue":3.75,"weekdayMorning":"$37.00","weekdayAfternoon":"$27.00","weekdayTwilight":"$27.00","weekendMorning":"$60.00","weekendAfternoon":"$38.95","weekendTwilight":"$38.95"},{"name":"Golf Club of Dallas","rank":62,"timesPlayed":4.0,"maintenance":2.25,"fairways":2.25,"rough":2.25,"bunkers":2.25,"greens":2.25,"layout":1.75,"difficulty":2.75,"aura":4.0,"range":3.0,"clubhouse":3.0,"playability":2.63,"courseScore":2.56,"experience":2.56,"value":2.0,"par":72.0,"distance":6719.0,"index":72.7,"slope":133.0,"twilightValue":2.0,"weekdayMorning":"$50.00","weekdayAfternoon":"$50.00","weekdayTwilight":"$40.00","weekendMorning":"$70.00","weekendAfternoon":"$70.00","weekendTwilight":"$50.00"},{"name":"Oak Hollow Golf Course","rank":63,"timesPlayed":0,"maintenance":2.75,"fairways":2.75,"rough":2.75,"bunkers":2.75,"greens":2.75,"layout":2.75,"difficulty":2.0,"aura":2.75,"range":2.75,"clubhouse":2.75,"playability":2.67,"courseScore":2.74,"experience":2.72,"value":2.75,"par":70.0,"distance":6679.0,"index":72.3,"slope":121.0,"twilightValue":2.75,"weekdayMorning":"$54.00","weekdayAfternoon":"$44.00","weekdayTwilight":"$38.00","weekendMorning":"$54.00","weekendAfternoon":"$63.00","weekendTwilight":"$46.00"},{"name":"Whitestone Golf Club","rank":64,"timesPlayed":0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.5,"layout":2.5,"difficulty":4.0,"aura":2.5,"range":2.5,"clubhouse":2.5,"playability":3.74,"courseScore":2.71,"experience":2.67,"value":2.25,"par":72.0,"distance":7117.0,"index":74.7,"slope":135.0,"twilightValue":3.5,"weekdayMorning":"$54.50","weekdayAfternoon":"$54.50","weekdayTwilight":"$37.88","weekendMorning":"$63.74","weekendAfternoon":"$63.74","weekendTwilight":"$37.88"},{"name":"Prairie Lakes Golf Course","rank":65,"timesPlayed":1.0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":3.0,"layout":2.5,"difficulty":2.0,"aura":3.0,"range":2.75,"clubhouse":2.75,"playability":2.54,"courseScore":2.63,"experience":2.62,"value":4.25,"par":71.0,"distance":6640.0,"index":71.7,"slope":126.0,"twilightValue":2.75,"weekdayMorning":"$35.00","weekdayAfternoon":"$35.00","weekdayTwilight":"$35.00","weekendMorning":"$45.00","weekendAfternoon":"$45.00","weekendTwilight":"$45.00"},{"name":"Cleburne Golf Links","rank":66,"timesPlayed":0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.5,"layout":2.5,"difficulty":2.5,"aura":2.5,"range":2.5,"clubhouse":2.5,"playability":3.19,"courseScore":2.61,"experience":2.58,"value":3.5,"par":72.0,"distance":7068.0,"index":73.7,"slope":128.0,"twilightValue":3.5,"weekdayMorning":"$42.00","weekdayAfternoon":"$42.00","weekdayTwilight":"$32.00","weekendMorning":"$49.00","weekendAfternoon":"$49.00","weekendTwilight":"$37.00"},{"name":"Country View Golf Club","rank":67,"timesPlayed":1.0,"maintenance":3.25,"fairways":3.0,"rough":3.25,"bunkers":2.5,"greens":3.25,"layout":2.75,"difficulty":1.75,"aura":1.75,"range":3.25,"clubhouse":3.5,"playability":2.43,"courseScore":2.72,"experience":2.74,"value":3.75,"par":70.0,"distance":6534.0,"index":71.0,"slope":128.0,"twilightValue":4.0,"weekdayMorning":"$46.00","weekdayAfternoon":"$37.00","weekdayTwilight":"$29.00","weekendMorning":"$59.00","weekendAfternoon":"$45.00","weekendTwilight":"$35.00"},{"name":"Cedar Creek Country Club","rank":68,"timesPlayed":0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.5,"layout":2.5,"difficulty":2.0,"aura":2.5,"range":2.5,"clubhouse":2.5,"playability":2.74,"courseScore":2.54,"experience":2.51,"value":1.5,"par":72.0,"distance":6819.0,"index":72.3,"slope":125.0,"twilightValue":1.25,"weekdayMorning":"$65.00","weekdayAfternoon":"$55.00","weekdayTwilight":"$45.00","weekendMorning":"$85.00","weekendAfternoon":"$75.00","weekendTwilight":"$65.00"},{"name":"Tenison Park Golf Course - Glen Course","rank":69,"timesPlayed":10.0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":null,"greens":2.5,"layout":2.5,"difficulty":2.0,"aura":2.5,"range":3.0,"clubhouse":3.25,"playability":2.51,"courseScore":2.5,"experience":2.51,"value":4.75,"par":72.0,"distance":6607.0,"index":71.8,"slope":119.0,"twilightValue":4.0,"weekdayMorning":"$35.10","weekdayAfternoon":"$32.33","weekdayTwilight":"$31.41","weekendMorning":"$35.10","weekendAfternoon":"$32.33","weekendTwilight":"$31.41"},{"name":"Keeton Park Golf Course","rank":70,"timesPlayed":5.0,"maintenance":2.5,"fairways":2.5,"rough":2.5,"bunkers":2.5,"greens":2.75,"layout":2.25,"difficulty":2.0,"aura":2.5,"range":3.25,"clubhouse":2.75,"playability":2.33,"courseScore":2.47,"experience":2.47,"value":3.5,"par":72.0,"distance":6521.0,"index":71.5,"slope":122.0,"twilightValue":2.75,"weekdayMorning":"$45.00","weekdayAfternoon":"$39.00","weekdayTwilight":"$39.00","weekendMorning":"$47.00","weekendAfternoon":"$42.00","weekendTwilight":"$42.00"},{"name":"Stone River Golf Club","rank":71,"timesPlayed":1.0,"maintenance":2.5,"fairways":2.5,"rough":3.0,"bunkers":null,"greens":2.5,"layout":1.75,"difficulty":1.75,"aura":2.5,"range":3.25,"clubhouse":3.0,"playability":1.98,"courseScore":2.39,"experience":2.39,"value":4.0,"par":72.0,"distance":6432.0,"index":69.4,"slope":114.0,"twilightValue":4.5,"weekdayMorning":"$34.18","weekdayAfternoon":"$34.18","weekdayTwilight":"$28.24","weekendMorning":"$44.34","weekendAfternoon":"$44.34","weekendTwilight":"$28.24"},{"name":"Webb Hill Country Club","rank":72,"timesPlayed":0,"maintenance":2.0,"fairways":2.0,"rough":2.0,"bunkers":2.0,"greens":2.0,"layout":2.0,"difficulty":2.25,"aura":2.0,"range":2.0,"clubhouse":2.0,"playability":2.62,"courseScore":2.1,"experience":2.04,"value":2.0,"par":72.0,"distance":6787.0,"index":73.3,"slope":130.0,"twilightValue":1.25,"weekdayMorning":"$45.00","weekdayAfternoon":"$45.00","weekdayTwilight":"$45.00","weekendMorning":"$55.00","weekendAfternoon":"$55.00","weekendTwilight":"$55.00"},{"name":"Kings Creek Golf Club","rank":73,"timesPlayed":0,"maintenance":2.0,"fairways":2.0,"rough":2.0,"bunkers":2.0,"greens":2.0,"layout":2.0,"difficulty":2.0,"aura":2.0,"range":2.0,"clubhouse":2.0,"playability":2.23,"courseScore":2.04,"experience":1.97,"value":2.75,"par":71.0,"distance":6507.0,"index":72.0,"slope":124.0,"twilightValue":2.5,"weekdayMorning":"$35.00","weekdayAfternoon":"$25.00","weekdayTwilight":"$25.00","weekendMorning":"$55.00","weekendAfternoon":"$45.00","weekendTwilight":"$35.00"},{"name":"The Club at Frisco Farms","rank":74,"timesPlayed":4.0,"maintenance":1.5,"fairways":2.5,"rough":1.25,"bunkers":2.0,"greens":2.5,"layout":2.5,"difficulty":1.75,"aura":1.5,"range":4.25,"clubhouse":4.5,"playability":2.17,"courseScore":1.97,"experience":2.06,"value":1.25,"par":72.0,"distance":6375.0,"index":70.9,"slope":122.0,"twilightValue":1.5,"weekdayMorning":"$52.00","weekdayAfternoon":"$41.00","weekdayTwilight":"$41.00","weekendMorning":"$82.00","weekendAfternoon":"$70.00","weekendTwilight":"$48.00"},{"name":"Duck Creek Golf Club","rank":75,"timesPlayed":1.0,"maintenance":2.0,"fairways":2.0,"rough":3.0,"bunkers":2.0,"greens":2.0,"layout":2.0,"difficulty":2.0,"aura":1.0,"range":2.5,"clubhouse":1.0,"playability":2.25,"courseScore":1.96,"experience":1.87,"value":2.5,"par":71.0,"distance":6523.0,"index":71.9,"slope":123.0,"twilightValue":2.75,"weekdayMorning":"$35.10","weekdayAfternoon":"$35.10","weekdayTwilight":"$30.02","weekendMorning":"$47.11","weekendAfternoon":"$41.56","weekendTwilight":"$32.33"},{"name":"Riverchase Golf Club","rank":76,"timesPlayed":5.0,"maintenance":1.25,"fairways":2.0,"rough":1.5,"bunkers":1.0,"greens":2.75,"layout":3.0,"difficulty":2.75,"aura":1.0,"range":3.0,"clubhouse":3.25,"playability":2.91,"courseScore":1.88,"experience":1.89,"value":1.75,"par":71.0,"distance":6593.0,"index":72.5,"slope":133.0,"twilightValue":1.75,"weekdayMorning":"$40.00","weekdayAfternoon":"$40.00","weekdayTwilight":"$30.00","weekendMorning":"$60.00","weekendAfternoon":"$60.00","weekendTwilight":"$40.00"},{"name":"Deer Run Golf Club","rank":77,"timesPlayed":0,"maintenance":1.75,"fairways":1.75,"rough":1.75,"bunkers":1.75,"greens":1.75,"layout":1.75,"difficulty":1.75,"aura":1.75,"range":1.75,"clubhouse":1.75,"playability":2.31,"courseScore":1.84,"experience":1.76,"value":2.5,"par":72.0,"distance":6727.0,"index":72.0,"slope":116.0,"twilightValue":4.5,"weekdayMorning":"$37.00","weekdayAfternoon":"$37.00","weekdayTwilight":"$21.00","weekendMorning":"$37.00","weekendAfternoon":"$37.00","weekendTwilight":"$21.00"},{"name":"Grand Oaks Golf Club","rank":78,"timesPlayed":1.0,"maintenance":2.0,"fairways":1.5,"rough":2.5,"bunkers":1.5,"greens":1.0,"layout":2.0,"difficulty":2.0,"aura":1.0,"range":2.5,"clubhouse":4.0,"playability":2.73,"courseScore":1.79,"experience":1.8,"value":1.75,"par":71.0,"distance":6953.0,"index":73.1,"slope":125.0,"twilightValue":2.0,"weekdayMorning":"$40.00","weekdayAfternoon":"$40.00","weekdayTwilight":"$27.00","weekendMorning":"$50.00","weekendAfternoon":"$50.00","weekendTwilight":"$36.00"},{"name":"Lake Park Golf Club","rank":79,"timesPlayed":0,"maintenance":1.75,"fairways":1.75,"rough":1.75,"bunkers":1.75,"greens":1.75,"layout":1.75,"difficulty":1.75,"aura":1.75,"range":1.75,"clubhouse":1.75,"playability":1.65,"courseScore":1.73,"experience":1.65,"value":1.5,"par":70.0,"distance":6135.0,"index":68.3,"slope":108.0,"twilightValue":1.25,"weekdayMorning":"$45.00","weekdayAfternoon":"$45.00","weekdayTwilight":"$32.00","weekendMorning":"$61.00","weekendAfternoon":"$61.00","weekendTwilight":"$61.00"},{"name":"Waxahachie Golf Club","rank":80,"timesPlayed":1.0,"maintenance":1.0,"fairways":1.5,"rough":1.75,"bunkers":null,"greens":1.0,"layout":1.0,"difficulty":1.0,"aura":1.0,"range":0.0,"clubhouse":1.0,"playability":1.17,"courseScore":1.2,"experience":1.03,"value":1.25,"par":70.0,"distance":6156.0,"index":68.5,"slope":104.0,"twilightValue":1.25,"weekdayMorning":"$35.00","weekdayAfternoon":"$35.00","weekdayTwilight":"$30.00","weekendMorning":"$39.00","weekendAfternoon":"$39.00","weekendTwilight":"$34.00"}];
+
+// ── Reviews keyed by course name ──
+const REVIEWS = {
+  "Coyote Ridge": `<p>Coyote Ridge is one of the strongest public tests in DFW because it combines real length with demanding second shots and a back nine that can turn on you quickly. It feels like a modern, athletic course that asks for committed ball striking, especially when you move back on the tee boxes. The front gives you enough space to settle in, but the course gets progressively more difficult as hazards and green complexes start influencing where you have to place the ball, not just hit it.</p><p>The defining stretch is 9 through 12, one of the toughest four-hole runs in the metroplex. It stacks length, water, and demanding approaches in a way that makes par feel earned. Conditioning is a major part of why the course works — fairways are typically lush, rough has enough thickness to take away spin, and bunkers are deep and consistently maintained. Greens roll smooth and true.</p><p>The facility side adds a lot. The range is large and high quality for a public course, and the clubhouse has a real country club feel. Coyote Ridge belongs in the top tier of DFW public golf.</p>`,
+  "Firewheel Golf Park - Old Course": `<p>The Old Course just came back from a comprehensive renovation that replaced the greens, tees, and fairways top to bottom. Playing it fresh out of that overhaul, the difference is obvious. Everything feels new. The surfaces have that just-built integrity you can trust, and after years of being the most trafficked of the three Firewheel courses, it now looks and plays like it has been reset to factory settings.</p><p>The design is what it has always been — gently rolling terrain with slow moving streams, tree-lined corridors, and 65 strategically placed bunkers across a par 71 that plays closer to the shorter end of the DFW public spectrum. The greens are pure, consistent, and rolling true. They are running a little slow right now — early grow-in season — but that will sort itself out. The underlying quality is clearly there.</p><p>Overall, the renovation has done exactly what it was supposed to do. The Old Course is back, in the best condition it has been in years, and it gives DFW golfers a fun, gettable round on surfaces you can actually trust.</p>`,
+  "Firewheel Golf Park - Lakes Course": `<p>Firewheel Lakes is the most penal and visually water-driven of the three Firewheel courses, and it plays like it knows it. Creeks and ponds are in the frame all day, and a lot of holes ask you to commit to a line because the bailouts either bring water into play or set up an awkward approach. When you are swinging well, it is a fun challenge with real shot value. When you are loose off the tee, it can turn into a grind quickly.</p><p>The greens are one of the stronger parts of the course — larger, with more movement than the other Firewheel layouts, which makes approach placement matter. The downside is the course can feel one-note because so many holes use the same water-pressure fear factor. Conditions are typical of a busy muni golf park. A good option when you want a tougher test at Firewheel, but the total package feels more like solid muni golf than a standout destination.</p>`,
+};
+
+// ── Helpers ──
+function scoreColor(v) {
+  if (!v) return '';
+  if (v >= 4.5) return 'sc-5';
+  if (v >= 4.0) return 'sc-4';
+  if (v >= 3.5) return 'sc-35';
+  if (v >= 3.0) return 'sc-3';
+  if (v >= 2.0) return 'sc-2';
+  return 'sc-1';
+}
+function fmt(v) { return v != null ? v.toFixed(2) : '—'; }
+function fmtPrice(v) {
+  if (!v || v === '' || v === 'x') return '—';
+  return v;
+}
+function miniBar(v) {
+  if (!v) return '';
+  const pct = (v / 5) * 100;
+  return `<span class="mini-bar-wrap"><span class="mini-bar-fill" style="width:${pct}%"></span></span>`;
+}
+
+// ── Stats ──
+const totalRounds = DATA.reduce((s, c) => s + (c.timesPlayed || 0), 0);
+const avgExp = DATA.reduce((s, c) => s + (c.experience || 0), 0) / DATA.length;
+document.getElementById('totalRounds').textContent = totalRounds;
+document.getElementById('avgExp').textContent = avgExp.toFixed(2);
+
+// ── Render table ──
+let currentSort = 'rank';
+let currentSearch = '';
+let filteredData = [...DATA];
+
+const TIER_BREAKS = [
+  { after: 10, label: 'Tier 2 — Top Courses' },
+  { after: 25, label: 'Tier 3 — Good Tracks' },
+  { after: 45, label: 'Tier 4 — Average' },
+  { after: 60, label: 'Tier 5 — Below Average' },
+];
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  let sorted = [...DATA].filter(c => {
+    if (!currentSearch) return true;
+    return c.name.toLowerCase().includes(currentSearch.toLowerCase());
+  });
+
+  if (currentSort === 'rank') {
+    sorted.sort((a, b) => a.rank - b.rank);
+  } else if (currentSort === 'name') {
+    sorted.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (currentSort === 'value') {
+    sorted.sort((a, b) => (b.value || 0) - (a.value || 0));
+  } else if (currentSort === 'timesPlayed') {
+    sorted.sort((a, b) => (b.timesPlayed || 0) - (a.timesPlayed || 0));
+  } else {
+    sorted.sort((a, b) => (b[currentSort] || 0) - (a[currentSort] || 0));
+  }
+
+  filteredData = sorted;
+  document.getElementById('countLabel').textContent = `Showing ${sorted.length} course${sorted.length !== 1 ? 's' : ''}`;
+  document.getElementById('hdrCount').textContent = sorted.length;
+
+  let lastTierInserted = -1;
+
+  sorted.forEach((c, idx) => {
+    // Tier dividers only when sorted by rank
+    if (currentSort === 'rank' && !currentSearch) {
+      TIER_BREAKS.forEach(tb => {
+        if (c.rank === tb.after + 1 && lastTierInserted !== tb.after) {
+          lastTierInserted = tb.after;
+          const divRow = document.createElement('tr');
+          divRow.className = 'tier-divider';
+          divRow.innerHTML = `<td colspan="10">${tb.label}</td>`;
+          tbody.appendChild(divRow);
+        }
+      });
+    }
+
+    const rankClass = c.rank === 1 ? 'g1' : c.rank <= 3 ? 'g2' : c.rank <= 10 ? 'g3' : '';
+    const rowClass = c.rank === 1 ? 'r1' : c.rank === 2 ? 'r2' : c.rank === 3 ? 'r3' : '';
+
+    const tr = document.createElement('tr');
+    if (rowClass) tr.className = rowClass;
+    tr.dataset.idx = idx;
+
+    tr.innerHTML = `
+      <td class="td-rank ${rankClass}">${c.rank}</td>
+      <td>
+        <div class="td-name">${c.name}</div>
+        <div class="td-sub">Par ${c.par || '—'} &bull; ${c.distance ? c.distance.toFixed(0) + ' yds' : '—'} &bull; Slope ${c.slope || '—'}</div>
+      </td>
+      <td class="td-score ${scoreColor(c.experience)}">${fmt(c.experience)}${miniBar(c.experience)}</td>
+      <td class="td-score ${scoreColor(c.courseScore)}">${fmt(c.courseScore)}</td>
+      <td class="td-score ${scoreColor(c.greens)}">${fmt(c.greens)}</td>
+      <td class="td-score ${scoreColor(c.layout)}">${fmt(c.layout)}</td>
+      <td class="td-score ${scoreColor(c.value)}">${fmt(c.value)}</td>
+      <td class="td-rounds">${c.timesPlayed > 0 ? c.timesPlayed : '—'}</td>
+      <td class="td-price">${fmtPrice(c.weekdayMorning)}</td>
+      <td><span class="arrow-icon">→</span></td>
+    `;
+    tr.addEventListener('click', () => openModal(idx));
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Sort by column header click ──
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    document.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+    th.classList.add('sorted');
+    currentSort = th.dataset.col;
+    document.getElementById('sortSel').value = currentSort;
+    renderTable();
+  });
+});
+
+document.getElementById('sortSel').addEventListener('change', e => {
+  currentSort = e.target.value;
+  renderTable();
+});
+
+document.getElementById('search').addEventListener('input', e => {
+  currentSearch = e.target.value;
+  renderTable();
+});
+
+// ── Modal ──
+let currentModalIdx = 0;
+
+function openModal(idx) {
+  currentModalIdx = idx;
+  const c = filteredData[idx];
+
+  document.getElementById('modalHero').dataset.rank = '#' + c.rank;
+  document.getElementById('modalEyebrow').textContent = `Ranked #${c.rank} of ${DATA.length}`;
+  document.getElementById('modalName').textContent = c.name;
+
+  document.getElementById('modalMetaBar').innerHTML = `
+    <div class="meta-item"><div class="meta-lbl">Experience</div><div class="meta-val">${fmt(c.experience)}</div></div>
+    <div class="meta-item"><div class="meta-lbl">Course Score</div><div class="meta-val">${fmt(c.courseScore)}</div></div>
+    <div class="meta-item"><div class="meta-lbl">Rounds Played</div><div class="meta-val">${c.timesPlayed > 0 ? c.timesPlayed : '—'}</div></div>
+    <div class="meta-item"><div class="meta-lbl">Value Rating</div><div class="meta-val">${fmt(c.value)}</div></div>
+  `;
+
+  const reviewHtml = REVIEWS[c.name]
+    ? `<div class="review-text">${REVIEWS[c.name]}</div>`
+    : `<div class="no-review">No written review yet — add your notes in the REVIEWS object in the code.</div>`;
+
+  const ratings = [
+    { label: 'Maintenance', key: 'maintenance' },
+    { label: 'Fairways', key: 'fairways' },
+    { label: 'Rough / Waste', key: 'rough' },
+    { label: 'Bunkers', key: 'bunkers' },
+    { label: 'Greens', key: 'greens' },
+    { label: 'Layout', key: 'layout' },
+    { label: 'Difficulty', key: 'difficulty' },
+    { label: 'Aura', key: 'aura' },
+    { label: 'Range', key: 'range' },
+    { label: 'Clubhouse / Bar', key: 'clubhouse' },
+  ];
+
+  const ratingsHtml = ratings.map(r => {
+    const v = c[r.key];
+    const pct = v != null ? (v / 5) * 100 : 0;
+    return `
+      <div class="rating-cell">
+        <div class="rating-cell-label">${r.label}</div>
+        <div class="rating-cell-row">
+          <div class="rating-bar-bg"><div class="rating-bar-fg" style="width:${pct}%"></div></div>
+          <div class="rating-cell-val">${v != null ? v.toFixed(2) : '—'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const priceHtml = `
+    <div class="review-section-title">Green Fees</div>
+    <table class="pricing-table">
+      <thead><tr><th></th><th>Morning</th><th>Afternoon</th><th>Twilight</th></tr></thead>
+      <tbody>
+        <tr><td>Weekday</td><td>${fmtPrice(c.weekdayMorning)}</td><td>${fmtPrice(c.weekdayAfternoon)}</td><td>${fmtPrice(c.weekdayTwilight)}</td></tr>
+        <tr><td>Weekend</td><td>${fmtPrice(c.weekendMorning)}</td><td>${fmtPrice(c.weekendAfternoon)}</td><td>${fmtPrice(c.weekendTwilight)}</td></tr>
+      </tbody>
+    </table>
+  `;
+
+  const prevDisabled = idx === 0 ? 'disabled' : '';
+  const nextDisabled = idx === filteredData.length - 1 ? 'disabled' : '';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="photo-upload-zone">📷 Drop photo URLs into the REVIEWS object to display images here</div>
+
+    <div class="review-section-title">Written Review</div>
+    ${reviewHtml}
+
+    <div class="review-section-title">Score Summary</div>
+    <div class="score-trio">
+      <div class="score-trio-item">
+        <div class="score-trio-label">Playability</div>
+        <div class="score-trio-val">${fmt(c.playability)}</div>
+      </div>
+      <div class="score-trio-item">
+        <div class="score-trio-label">Course</div>
+        <div class="score-trio-val">${fmt(c.courseScore)}</div>
+      </div>
+      <div class="score-trio-item">
+        <div class="score-trio-label">Experience</div>
+        <div class="score-trio-val">${fmt(c.experience)}</div>
+      </div>
+    </div>
+
+    <div class="review-section-title">Rating Breakdown</div>
+    <div class="ratings-grid">${ratingsHtml}</div>
+
+    ${priceHtml}
+
+    <div class="review-section-title">Course Details</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.1rem;background:var(--border);margin-bottom:2rem;">
+      <div class="score-trio-item"><div class="score-trio-label">Par</div><div class="score-trio-val" style="font-size:1.4rem">${c.par || '—'}</div></div>
+      <div class="score-trio-item"><div class="score-trio-label">Distance</div><div class="score-trio-val" style="font-size:1.4rem">${c.distance ? c.distance.toFixed(0) + ' y' : '—'}</div></div>
+      <div class="score-trio-item"><div class="score-trio-label">Slope / Index</div><div class="score-trio-val" style="font-size:1.4rem">${c.slope || '—'} / ${c.index || '—'}</div></div>
+    </div>
+
+    <div class="modal-nav">
+      <button class="modal-nav-btn" ${prevDisabled} onclick="openModal(${idx - 1})">← Previous</button>
+      <button class="modal-nav-btn" ${nextDisabled} onclick="openModal(${idx + 1})">Next →</button>
+    </div>
+  `;
+
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('overlay').scrollTop = 0;
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.rating-bar-fg').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0';
+      setTimeout(() => bar.style.width = w, 50);
+    });
+  }, 20);
+}
+
+document.getElementById('closeBtn').addEventListener('click', () => {
+  document.getElementById('overlay').classList.remove('open');
+});
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('open');
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('overlay').classList.remove('open');
+  const ov = document.getElementById('overlay');
+  if (ov.classList.contains('open')) {
+    if (e.key === 'ArrowRight' && currentModalIdx < filteredData.length - 1) openModal(currentModalIdx + 1);
+    if (e.key === 'ArrowLeft' && currentModalIdx > 0) openModal(currentModalIdx - 1);
+  }
+});
+
+renderTable();
+</script>
+</body>
+</html>
